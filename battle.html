@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>English Mystery — Battle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{--bg:#070b16;--line:rgba(226,190,120,.18);--gold:#e2be78;--text:#eef1f7;--muted:#9aa6bd;--ok:#3ccf91;--bad:#ff6b6b;
+  --a0:#e5484d;--a1:#3e8ef7;--a2:#f5a524;--a3:#2fbf71;--r:18px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif}
+body{background:radial-gradient(1200px 600px at 15% -10%,rgba(226,190,120,.10),transparent 60%),radial-gradient(900px 500px at 110% 10%,rgba(62,142,247,.08),transparent 60%),var(--bg);min-height:100vh}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+.serif{font-family:Fraunces,Georgia,serif}
+.wrap{max-width:1240px;margin:0 auto;padding:18px}
+.kicker{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.muted{color:var(--muted)}
+.card{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.012));border:1px solid var(--line);border-radius:var(--r);padding:22px}
+.btn{border:1px solid var(--line);background:rgba(255,255,255,.05);border-radius:999px;padding:12px 22px;font-weight:700;transition:.15s}
+.btn:hover{border-color:var(--gold)}
+.btn-gold{background:linear-gradient(180deg,#f0d394,#c99a4b);color:#1a1206;border:none;box-shadow:0 8px 24px rgba(226,190,120,.25)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.hidden{display:none!important}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button{border-radius:12px;padding:10px 14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);font-weight:600}
+.seg button.on{border-color:var(--gold);background:rgba(226,190,120,.14);color:var(--gold)}
+label.lb{display:block;font-size:12px;font-weight:700;color:var(--muted);margin:14px 0 8px;letter-spacing:.08em;text-transform:uppercase}
+input.txt{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:14px 16px;font-size:20px;outline:none}
+input.txt:focus{border-color:var(--gold)}
+.hero h1{font-size:clamp(40px,7vw,76px);margin:6px 0 0;line-height:.95}
+.hero h1 em{font-style:normal;background:linear-gradient(180deg,#f3d9a2,#b8893f);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* ---------- start ---------- */
+.choose{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:22px}
+@media (max-width:860px){.choose{grid-template-columns:1fr}}
+a.card{color:inherit;text-decoration:none}
+.choose .card{cursor:pointer;transition:.15s;text-align:left}
+.choose .card:hover{border-color:var(--gold);transform:translateY(-2px)}
+.choose .big{font-size:42px}
+.choose h3{margin:8px 0 6px;font-size:24px}
+
+/* ---------- host ---------- */
+.hbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.code-pill{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:14px;padding:8px 14px;background:rgba(255,255,255,.03)}
+.code-pill b{font-family:Fraunces,serif;font-size:24px;letter-spacing:.12em;color:var(--gold)}
+.lobby{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}
+@media (max-width:900px){.lobby{grid-template-columns:1fr}}
+.join-box{text-align:center}
+.join-box .code{font-family:Fraunces,serif;font-size:clamp(64px,10vw,120px);font-weight:800;letter-spacing:.12em;line-height:1;color:var(--gold);margin:8px 0}
+.join-box .url{font-size:18px;word-break:break-all}
+#qr{display:inline-block;background:#fff;padding:12px;border-radius:16px;margin-top:14px}
+#qr img,#qr canvas{display:block;width:200px!important;height:200px!important}
+.chips{display:flex;flex-wrap:wrap;gap:10px;min-height:60px;align-content:flex-start}
+.chip{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-weight:700;font-size:17px;animation:pop .35s cubic-bezier(.2,1.6,.4,1)}
+.chip .av{font-size:22px}
+.chip.off{opacity:.4}
+@keyframes pop{from{transform:scale(.4);opacity:0}}
+.count{font-family:Fraunces,serif;font-size:44px;font-weight:800}
+
+.qhost{display:grid;grid-template-columns:1fr 280px;gap:16px}
+@media (max-width:900px){.qhost{grid-template-columns:1fr}}
+.qtext{font-size:clamp(26px,3.4vw,44px);line-height:1.3;margin:12px 0 22px;font-weight:700}
+.qtext .blank{display:inline-block;min-width:110px;border-bottom:4px dashed var(--gold);text-align:center;color:var(--gold)}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ans{display:flex;align-items:center;gap:14px;border-radius:16px;padding:20px;font-size:clamp(18px,2vw,26px);font-weight:800;color:#fff;background:var(--c);min-height:86px;position:relative;overflow:hidden;border:none;text-align:left}
+.ans .sh{font-size:26px;opacity:.9;width:30px;text-align:center}
+.ans.dim{opacity:.25}
+.ans.right{box-shadow:0 0 0 4px #fff inset}
+.ans .cnt{margin-left:auto;font-family:Fraunces,serif;font-size:28px}
+.ans .barfill{position:absolute;left:0;bottom:0;height:6px;background:rgba(255,255,255,.6);width:var(--w,0%);transition:width .6s}
+.side-stat{display:flex;flex-direction:column;gap:14px}
+.ring{position:relative;width:150px;height:150px;margin:0 auto}
+.ring svg{transform:rotate(-90deg)}
+.ring .num{position:absolute;inset:0;display:grid;place-items:center;font-family:Fraunces,serif;font-size:52px;font-weight:800}
+.ring.low .num{color:var(--bad)}
+.answered{text-align:center}
+.answered .count{color:var(--gold)}
+.lb-list{display:flex;flex-direction:column;gap:8px}
+.lb-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;background:rgba(255,255,255,.05);font-size:20px;font-weight:700;transition:transform .5s}
+.lb-row .pos{width:32px;color:var(--muted);font-family:Fraunces,serif}
+.lb-row .av{font-size:26px}
+.lb-row .sc{margin-left:auto;font-family:Fraunces,serif;font-size:24px;display:flex;flex-direction:column;align-items:flex-end;line-height:1.1}
+.lb-row .gain{font-size:13px;color:var(--ok);font-family:Inter}
+.lb-row .streak{font-size:14px;color:#ffb44d}
+.lb-row.top1{background:linear-gradient(90deg,rgba(226,190,120,.28),rgba(226,190,120,.06));border:1px solid var(--line)}
+.explain{border-radius:14px;padding:14px 16px;background:rgba(60,207,145,.1);border:1px solid rgba(60,207,145,.35);font-size:18px;line-height:1.5;margin-top:14px}
+.ev-line{margin-top:10px;font-size:18px;font-weight:700}
+.story{font-family:Fraunces,serif;font-size:clamp(20px,2.2vw,28px);line-height:1.6}
+.email{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:rgba(255,255,255,.03);font-size:clamp(16px,1.7vw,21px);line-height:1.6;margin-top:12px}
+.gw{border-bottom:2px dotted var(--gold);color:#fff2d6;cursor:help}
+.tip{position:fixed;z-index:50;background:#fff7e6;color:#1b1406;border-radius:12px;padding:10px 14px;font-size:15px;box-shadow:0 12px 30px rgba(0,0,0,.4);pointer-events:none;max-width:260px}
+.tip b{display:block}
+.sus3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:700px){.sus3{grid-template-columns:1fr}}
+.susc{border-radius:16px;padding:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+.susc .hd{display:flex;gap:12px;align-items:center;margin-bottom:8px}
+.susc svg{width:64px;height:64px;flex:none}
+.susc p{margin:0;font-family:Fraunces,serif;font-size:18px;line-height:1.5;color:#f1e6cf}
+.board{border-radius:18px;padding:20px;background:radial-gradient(circle at 20% 30%,rgba(0,0,0,.18) 0 2px,transparent 3px) 0 0/22px 22px,linear-gradient(135deg,#8a5a34,#6e4526);box-shadow:inset 0 0 0 10px #4a2e19}
+.board-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.pin{position:relative;background:#fbf6ea;color:#2a1f10;border-radius:4px;padding:16px 12px 12px;box-shadow:0 10px 18px rgba(0,0,0,.35);transform:rotate(var(--rot,0deg))}
+.pin::before{content:"";position:absolute;top:-8px;left:50%;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ff8a8a,#c0262d)}
+.pin h5{margin:4px 0;font-family:Fraunces,serif;font-size:15px}
+.pin p{margin:0;font-size:13px;color:#4a3a22}
+.pin.locked{background:rgba(255,255,255,.12);color:rgba(255,255,255,.7);box-shadow:none;border:2px dashed rgba(255,255,255,.35)}
+.pin.locked p{color:rgba(255,255,255,.6)}
+.stagehead h2{font-size:clamp(30px,4vw,48px);margin:6px 0 4px}
+.podium{display:flex;justify-content:center;align-items:flex-end;gap:16px;margin:26px 0}
+.pod{width:190px;text-align:center}
+.pod .bar{border-radius:14px 14px 0 0;background:linear-gradient(180deg,rgba(226,190,120,.35),rgba(226,190,120,.08));border:2px solid var(--gold);display:grid;place-items:center;font-family:Fraunces,serif;font-size:30px;font-weight:800;animation:grow .8s ease-out both}
+.pod .av{font-size:54px}
+.pod .nm{font-weight:800;font-size:20px;margin-bottom:8px}
+@keyframes grow{from{transform:scaleY(0);transform-origin:bottom}}
+.verdict{text-align:center}
+.verdict .pt{position:relative;display:inline-block}
+.verdict svg{width:170px;height:170px}
+.stamp{position:absolute;left:50%;top:80%;transform:translate(-50%,-50%) rotate(-14deg);border:5px solid var(--bad);color:var(--bad);font-family:Fraunces,serif;font-weight:800;font-size:38px;padding:2px 14px;border-radius:10px;background:rgba(7,11,22,.6);animation:stamp .5s cubic-bezier(.2,1.8,.4,1) .4s both}
+@keyframes stamp{from{opacity:0;transform:translate(-50%,-50%) rotate(-14deg) scale(2.4)}}
+.vote-bars{display:grid;gap:10px;max-width:620px;margin:16px auto 0}
+.vb{display:flex;align-items:center;gap:12px}
+.vb .nm{width:110px;text-align:right;font-weight:700}
+.vb .tr{flex:1;height:30px;border-radius:8px;background:rgba(255,255,255,.06);overflow:hidden}
+.vb .fl{height:100%;background:var(--gold);width:var(--w);transition:width .8s}
+.vb.guilty .fl{background:var(--bad)}
+.hostnext{position:fixed;right:22px;bottom:22px;z-index:20}
+
+/* ---------- player (phone) ---------- */
+.ph{max-width:520px;margin:0 auto;padding:16px;min-height:100vh;display:flex;flex-direction:column}
+.ph-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px}
+.me{display:flex;align-items:center;gap:8px;font-weight:800}
+.me .av{font-size:26px}
+.score-pill{border-radius:999px;padding:6px 14px;background:rgba(255,255,255,.07);font-weight:800;font-family:Fraunces,serif;font-size:20px}
+.avs{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.avs button{font-size:30px;padding:8px 0;border-radius:12px;border:2px solid transparent;background:rgba(255,255,255,.05)}
+.avs button.on{border-color:var(--gold);background:rgba(226,190,120,.15)}
+.center{flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center}
+.center .big{font-size:72px;line-height:1}
+.center h2{font-size:30px;margin:12px 0 6px}
+.pq{font-size:22px;font-weight:700;line-height:1.35;margin:4px 0 16px}
+.pq .blank{display:inline-block;min-width:70px;border-bottom:3px dashed var(--gold)}
+.pans{display:grid;gap:10px;flex:1;align-content:start}
+.pans.grid2{grid-template-columns:1fr 1fr}
+.pbtn{border:none;border-radius:16px;min-height:84px;padding:14px;color:#fff;font-weight:800;font-size:19px;background:var(--c);display:flex;align-items:center;gap:10px;text-align:left;box-shadow:0 5px 0 rgba(0,0,0,.25);transition:transform .08s}
+.pbtn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.25)}
+.pbtn .sh{font-size:22px}
+.pbar{height:6px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin-bottom:14px}
+.pbar i{display:block;height:100%;background:var(--gold);width:100%;transition:width 1s linear}
+.res{border-radius:24px;padding:28px 18px;margin:auto 0}
+.res.ok{background:linear-gradient(180deg,rgba(60,207,145,.25),rgba(60,207,145,.06))}
+.res.bad{background:linear-gradient(180deg,rgba(255,107,107,.22),rgba(255,107,107,.05))}
+.res .pts{font-family:Fraunces,serif;font-size:46px;font-weight:800}
+.res .rk{margin-top:10px;font-size:18px;font-weight:700}
+.res .ex{margin-top:14px;font-size:15px;line-height:1.5;color:#d5dbe7;text-align:left;background:rgba(0,0,0,.2);border-radius:12px;padding:12px}
+.tiles{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.tile{border-radius:12px;padding:12px 14px;font-size:18px;font-weight:700;background:#1b2747;border:1px solid rgba(255,255,255,.12)}
+.tile.used{visibility:hidden}
+.aline{border:2px dashed var(--line);border-radius:14px;padding:10px;min-height:64px;display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;justify-content:center;align-items:center}
+.aline:empty::before{content:"Tap the words in order…";color:var(--muted)}
+.psus{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.psus button{border-radius:14px;padding:8px 4px;border:2px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);font-weight:700;font-size:14px}
+.psus button.on{border-color:var(--gold);background:rgba(226,190,120,.12)}
+.psus svg{width:64px;height:64px;display:block;margin:0 auto 4px}
+.pmot{display:grid;gap:8px;margin-top:12px}
+.pmot button{border-radius:12px;padding:12px;text-align:left;border:2px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);font-size:15px}
+.pmot button.on{border-color:var(--gold);background:rgba(226,190,120,.12)}
+.ptext{font-family:Fraunces,serif;font-size:19px;line-height:1.6;text-align:left}
+.conn{position:fixed;left:50%;top:10px;transform:translateX(-50%);background:#ff6b6b;color:#200;padding:6px 14px;border-radius:999px;font-weight:700;font-size:13px;z-index:80}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#fff7e6;color:#1b1406;padding:12px 18px;border-radius:999px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:70}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
+.err{color:var(--bad);font-weight:600;margin-top:10px;min-height:22px}
+kbd{font-size:12px;border:1px solid rgba(255,255,255,.25);border-bottom-width:2px;border-radius:6px;padding:1px 6px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="tip" class="tip hidden"></div>
+<canvas id="confetti" class="confetti"></canvas>
+<script>
+'use strict';
+const TEAM_COLORS = ['var(--t0)','var(--t1)','var(--t2)','var(--t3)'];
+const TEAM_DEFAULTS = ['Red Foxes','Blue Owls','Green Wolves','Purple Cats'];
+const STAGES = [
+  {id:'brief', ic:'📂', t:'Briefing', sub:'Read the case file. Tap gold words to see the translation.'},
+  {id:'talk',  ic:'🗣️', t:'Interrogation', sub:'Listen to every suspect. Not every answer is true.'},
+  {id:'duel',  ic:'⚔️', t:'Grammar Duel', sub:'Every correct answer unlocks a piece of evidence.'},
+  {id:'board', ic:'📌', t:'Evidence Board', sub:'Connect the clues. Which evidence really matters?'},
+  {id:'accuse',ic:'⚖️', t:'Accusation', sub:'Each team names the thief and the motive.'}
+];
+
+// Glossary: word -> [ru, kz]
+const GLOSS = {
+  'diamond':['бриллиант','гауһар'], 'exhibition':['выставка','көрме'], 'museum':['музей','мұражай'],
+  'display case':['витрина','витрина'], 'empty':['пустой','бос'], 'gone':['исчез','жоқ болып кетті'],
+  'thief':['вор','ұры'], 'keys':['ключи','кілттер'], 'side door':['боковая дверь','бүйір есік'],
+  'suspect':['подозреваемый','күдікті'], 'evidence':['улики, доказательства','айғақ, дәлел'],
+  'guard':['охранник','күзетші'], 'speech':['речь','сөз сөйлеу'], 'guests':['гости','қонақтар'],
+  'office':['офис, кабинет','кеңсе'], 'label':['этикетка, табличка','жапсырма, белгі'],
+  'navy':['тёмно-синий','қою көк'], 'jacket':['куртка','күртке'], 'garden':['сад','бақ'],
+  'main entrance':['главный вход','басты кіреберіс'], 'keycard':['ключ-карта','кілт-карта'],
+  'locker':['шкафчик','жеке шкаф'], 'collector':['коллекционер','коллекционер'],
+  'badge':['бейдж','бейдж'], 'glass dust':['стеклянная пыль','шыны шаңы'], 'motive':['мотив','себеп, мотив'],
+  'alibi':['алиби','алиби'], 'witness':['свидетель','куәгер'], 'claimed':['утверждал(а)','мәлімдеді'],
+  'confirmed':['подтвердили','растады'], 'unveil':['представить, открыть','таныстыру, ашу'],
+  'disappeared':['исчез','жоғалып кетті'], 'access':['доступ','кіру мүмкіндігі'],
+  'insisted':['настаивал(а)','табанды түрде айтты'], 'rushing':['спешащий, бегущий','асығып жүгірген']
+};
+
+const EVIDENCE = {
+  keycard:{ic:'💳', t:'Keycard Log', d:'Emily’s staff keycard opened the side exit at 8:17.'},
+  badge:{ic:'🪪', t:'Visitor Badge', d:'Emily’s badge was found on the ground just outside the side exit.'},
+  jacket:{ic:'🧥', t:'Navy Jacket', d:'A navy jacket with glass dust in the pocket was in Emily’s locker.'},
+  collector:{ic:'✉️', t:'Collector Message', d:'Emily wrote to a private collector about “a rare stone” last week.'},
+  patrol:{ic:'🔦', t:'Patrol Log', d:'Daniel checked the main entrance first and reached the side door at 8:18.'},
+  camera:{ic:'📹', t:'Camera Record', d:'The hall camera was turned toward the entrance, not the display case.'}
+};
+const EV_ORDER = ['keycard','badge','jacket','collector','patrol','camera'];
+
+const SUSPECTS = [
+  {id:'alexander', name:'Alexander', role:'Museum Director', pitch:.85},
+  {id:'emily', name:'Emily', role:'Museum Assistant', pitch:1.25},
+  {id:'daniel', name:'Daniel', role:'Security Guard', pitch:.7}
+];
+const MOTIVES = [
+  {id:'collector', t:'She planned to sell the diamond to a private collector.'},
+  {id:'insurance', t:'She wanted the museum to get the insurance money.'},
+  {id:'revenge', t:'She wanted revenge on Alexander.'},
+  {id:'mistake', t:'She took it by mistake.'}
+];
+
+const LEVELS = {
+  beginner:{
+    label:'Beginner · A1–A2',
+    story:[
+      'Tonight is the opening night of the Aurora [diamond] [exhibition] at the City [museum]. The doors open at 8:00. At 8:20 the director, Alexander, looks at the [display case]. It is [empty]! The diamond is [gone].'
+    ],
+    mail:'Dear Detective, please help me. The diamond was in the case at 7:30. Only Alexander, Emily and Daniel have [keys] to the case. The [side door] was opened at 8:17. Please find the [thief]. — Alexander',
+    notes:['Diamond in the case at <b>7:30</b>','Doors open at <b>8:00</b>','Side door opened at <b>8:17</b>','Case empty at <b>8:20</b>','Keys: <b>Alexander, Emily, Daniel</b>'],
+    talk:{
+      alexander:'I was in the main hall from eight o’clock. I gave a [speech] to the [guests]. At 8:20 I walked to the case, and it was empty.',
+      emily:'At 8:10 I went to the [office] to get a display [label]. I stayed in the office until 8:25. I never went near the side door.',
+      daniel:'First I checked the [main entrance]. I got to the side door at about 8:18. I saw a person in a [navy] [jacket] running into the [garden].'
+    },
+    q:{
+      brief:[
+        {type:'choice', p:'When was the diamond still in the case?', o:['At 7:30','At 8:17','At 8:20','At 9:00'], a:0, ex:'The email says: “The diamond was in the case at 7:30.”'},
+        {type:'choice', p:'Who has keys to the case?', o:['All the guests','Only the director','Alexander, Emily and Daniel','Nobody'], a:2, ex:'“Only Alexander, Emily and Daniel have keys to the case.”'},
+        {type:'tf', p:'The side door was opened at 8:17.', a:true, ex:'True — this is in Alexander’s email.'}
+      ],
+      talk:[
+        {type:'choice', p:'Whose story can other people check?', o:['Alexander’s — the guests saw his speech','Emily’s — she was alone in the office','Daniel’s — he was alone at the door','Nobody’s'], a:0, ex:'Many guests saw Alexander in the main hall. That is an <b>alibi</b> — proof that you were somewhere else.'},
+        {type:'choice', p:'Daniel: “I saw a person in a navy jacket ___ into the garden.”', o:['running','run','runs','ran'], a:0, ex:'<b>see someone + -ing</b> describes an action in progress: “I saw a person <b>running</b>.”'},
+        {type:'order', p:'Build Emily’s sentence.', w:['Emily','went','to','the','office','at','8:10'], ex:'Subject + past verb + place + time: “Emily went to the office at 8:10.”'}
+      ],
+      duel:[
+        {type:'choice', p:'Emily’s keycard ___ the side exit at 8:17.', o:['opened','opens','open','opening'], a:0, ev:'keycard', ex:'It happened in the past (at 8:17), so we use the past simple: <b>opened</b>.'},
+        {type:'choice', p:'The police found ___ visitor badge outside the door.', o:['a','an','—','some'], a:0, ev:'badge', ex:'“Visitor” starts with a consonant sound /v/, so we use <b>a</b>.'},
+        {type:'choice', p:'The navy jacket was ___ Emily’s locker.', o:['in','at','to','of'], a:0, ev:'jacket', ex:'Things inside a box, bag or locker are <b>in</b> it.'},
+        {type:'choice', p:'Emily ___ a message to a private collector last week.', o:['sent','send','sends','sending'], a:0, ev:'collector', ex:'“Last week” = finished past time → past simple: <b>sent</b> (irregular: send – sent – sent).'},
+        {type:'tf', p:'Is this sentence correct? “Daniel don’t work at night.”', a:false, ev:'patrol', ex:'With he / she / a name we use <b>doesn’t</b>: “Daniel doesn’t work at night.”'},
+        {type:'choice', p:'There ___ two cameras in the hall.', o:['were','was','is','be'], a:0, ev:'camera', ex:'“Two cameras” is plural and it is past → <b>were</b>.'}
+      ],
+      board:[
+        {type:'choice', p:'Which evidence shows that Emily was NOT in the office at 8:17?', o:['Keycard Log','Camera Record','Patrol Log','Collector Message'], a:0, ex:'Her keycard opened the side exit at 8:17 — so she was not in the office.'},
+        {type:'choice', p:'Why is the glass dust in the jacket pocket important?', o:['The person in this jacket was near the display case','Emily cleaned the windows','Daniel dropped it','It came from the street'], a:0, ex:'Glass dust connects the jacket with the display case.'}
+      ]
+    },
+    confession:'“Yes… it was me. A collector offered me a lot of money for the Aurora Diamond. I used my keycard, I took the diamond, and I ran out through the side door. I thought no one saw me.” — Emily'
+  },
+
+  detective:{
+    label:'Detective · B1–B2',
+    story:[
+      'Tonight the City [museum] was supposed to [unveil] the Aurora [diamond]. The doors had opened at 8:00, and the guests were already in the main hall when Alexander, the director, walked over to the [display case] at 8:20. It was [empty] — the diamond had [disappeared] without a sound.'
+    ],
+    mail:'Detective, the diamond was last seen in the case at 7:30. Only three people have [access] to it: myself, my assistant Emily and our [guard], Daniel. According to the security system, the [side door] was opened at 8:17. I need you to find the [thief] before the press finds out. — Alexander',
+    notes:['Last seen at <b>7:30</b>','Doors opened at <b>8:00</b>','Side door opened at <b>8:17</b>','Theft discovered at <b>8:20</b>','Access: <b>Alexander, Emily, Daniel</b>'],
+    talk:{
+      alexander:'I had been in the main hall since eight. I was giving a [speech], so dozens of [guests] can confirm where I was. I only went to the case at 8:20.',
+      emily:'Around 8:10 I went to the [office] to fetch a display [label]. I was there until 8:25, I promise. I hadn’t been near the side door all evening.',
+      daniel:'I’d checked the [main entrance] first, so I didn’t reach the side door until about 8:18. By then someone in a [navy] [jacket] was [rushing] into the [garden].'
+    },
+    q:{
+      brief:[
+        {type:'choice', p:'When was the diamond last seen?', o:['At 7:30','At 8:00','At 8:17','At 8:20'], a:0, ex:'“The diamond was last seen in the case at 7:30.”'},
+        {type:'choice', p:'Which detail suggests the thief knew the building well?', o:['The thief left through the side door, not the main entrance','The guests were in the main hall','The press may find out','The doors opened at 8:00'], a:0, ex:'Using a side door that guests don’t know about suggests someone from inside the museum.'},
+        {type:'tf', p:'Alexander discovered the theft before the guests arrived.', a:false, ex:'False. The doors had opened at 8:00 and he found the empty case at 8:20 — the guests were already inside.'}
+      ],
+      talk:[
+        {type:'choice', p:'Emily said, “I am in the office.” → Emily said that she ___ in the office.', o:['was','is','has been','will be'], a:0, ex:'Reported speech: present simple moves one step back → <b>was</b>.'},
+        {type:'choice', p:'Whose alibi can be confirmed by independent witnesses?', o:['Alexander’s','Emily’s','Daniel’s','Nobody’s'], a:0, ex:'Dozens of guests saw Alexander giving a speech — an <b>alibi</b> confirmed by <b>witnesses</b>.'},
+        {type:'order', p:'Report Daniel’s words.', w:['Daniel','claimed','that','he','had','seen','someone','in','a','navy','jacket'], ex:'Reported speech with past perfect: “Daniel claimed that he had seen someone in a navy jacket.”'}
+      ],
+      duel:[
+        {type:'choice', p:'The side exit ___ with Emily’s keycard at 8:17.', o:['was opened','opened','has opened','was opening'], a:0, ev:'keycard', ex:'The door didn’t open itself — someone opened it → passive: <b>was opened</b>.'},
+        {type:'choice', p:'If Emily ___ in the office, her badge wouldn’t have been found outside.', o:['had stayed','stayed','has stayed','would stay'], a:0, ev:'badge', ex:'Third conditional (an unreal past): <b>If + past perfect, would have + V3</b>.'},
+        {type:'choice', p:'The jacket, ___ was found in Emily’s locker, had glass dust in its pocket.', o:['which','who','what','where'], a:0, ev:'jacket', ex:'Non-defining relative clause about a thing → <b>which</b> (never “what”).'},
+        {type:'choice', p:'Emily had been in contact with a collector ___ the exhibition opened.', o:['before','since','during','while'], a:0, ev:'collector', ex:'Past perfect + <b>before</b> shows which action came first.'},
+        {type:'choice', p:'By the time Daniel reached the side door, the thief ___.', o:['had already left','already left','has already left','was already leave'], a:0, ev:'patrol', ex:'“By the time…” + an earlier past action → past perfect: <b>had already left</b>.'},
+        {type:'choice', p:'The camera must ___ toward the entrance on purpose.', o:['have been turned','had been turned','be turn','turned'], a:0, ev:'camera', ex:'Deduction about the past, passive: <b>must have been + V3</b>.'}
+      ],
+      board:[
+        {type:'choice', p:'Which piece of evidence directly contradicts Emily’s statement?', o:['Keycard Log','Collector Message','Camera Record','Patrol Log'], a:0, ex:'She claimed she was in the office until 8:25, but her keycard was used at the side exit at 8:17.'},
+        {type:'choice', p:'Which piece of evidence is NOT enough to prove guilt on its own?', o:['Collector Message','Keycard Log','Navy Jacket','Visitor Badge'], a:0, ex:'Writing to a collector shows a possible <b>motive</b>, but not that she actually stole anything.'}
+      ]
+    },
+    confession:'“Fine — I did it. A collector had offered me more money than I could earn in ten years. I turned the camera, used my keycard and slipped out through the side door. If Daniel hadn’t checked the main entrance first, he would have caught me.” — Emily'
+  }
+};
+
+
+function portrait(id){
+  const P = {
+    alexander:{bg:'#2a3350',skin:'#e7b78e',hair:'#c9cbd3',body:'#262b38',acc:'<rect x="56" y="88" width="8" height="22" fill="#e2be78"/><circle cx="50" cy="55" r="7" fill="none" stroke="#111" stroke-width="2"/><circle cx="70" cy="55" r="7" fill="none" stroke="#111" stroke-width="2"/><line x1="57" y1="55" x2="63" y2="55" stroke="#111" stroke-width="2"/>',hairShape:'<path d="M38 50 Q38 28 60 27 Q82 28 82 50 Q78 38 66 37 Q52 36 42 44 Z" fill="#c9cbd3"/>'},
+    emily:{bg:'#3a2a4d',skin:'#f1c7a2',hair:'#3b2417',body:'#1f3d70',acc:'<path d="M48 88 L60 104 L72 88" fill="none" stroke="#e8eefc" stroke-width="3"/>',hairBack:'<path d="M34 54 Q32 24 60 23 Q88 24 86 54 L90 96 Q74 90 60 90 Q46 90 30 96 Z" fill="#3b2417"/>',hairShape:'<path d="M38 52 Q40 27 60 27 Q80 27 82 52 Q74 36 56 38 Q46 40 38 52 Z" fill="#3b2417"/>'},
+    daniel:{bg:'#203646',skin:'#c48a5c',hair:'#1c1c1c',body:'#34465f',acc:'<circle cx="74" cy="98" r="4" fill="#e2be78"/>',hairShape:'<path d="M36 42 Q36 24 60 22 Q84 24 84 42 Z" fill="#1d2738"/><rect x="32" y="40" width="56" height="6" rx="3" fill="#141b29"/><circle cx="60" cy="32" r="4" fill="#e2be78"/>'}
+  }[id];
+  return `<svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="58" fill="${P.bg}"/>${P.hairBack||''}
+  <path d="M22 120 Q24 86 60 84 Q96 86 98 120 Z" fill="${P.body}"/>${P.acc.includes('rect x="56"')?P.acc.split('<circle')[0]:''}
+  <rect x="53" y="70" width="14" height="16" rx="6" fill="${P.skin}"/>
+  <ellipse cx="60" cy="54" rx="21" ry="24" fill="${P.skin}"/>
+  ${P.hairShape}
+  <circle cx="51" cy="56" r="2.6" fill="#1b1406"/><circle cx="69" cy="56" r="2.6" fill="#1b1406"/>
+  <path d="M53 67 Q60 71 67 67" fill="none" stroke="#7a3d2a" stroke-width="2.2" stroke-linecap="round"/>
+  ${P.acc.includes('rect x="56"')?'<circle'+P.acc.split('<circle').slice(1).join('<circle'):P.acc}
+  </svg>`;
+}
+
+
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const AVATARS = ['🦊','🦉','🐺','🐱','🐼','🐯','🐸','🐧','🦁','🐨','🐙','🦄'];
+const SHAPES = ['▲','◆','●','■'];
+const ACOL = ['var(--a0)','var(--a1)','var(--a2)','var(--a3)'];
+const LOCAL = /[?&]local\b/.test(location.search);
+const params = new URLSearchParams(location.search);
+const rid = () => Math.random().toString(36).slice(2,10);
+const store = { get(k,d){ try{const v=localStorage.getItem(k); return v?JSON.parse(v):d;}catch(e){return d;} }, set(k,v){ try{localStorage.setItem(k,JSON.stringify(v));}catch(e){} } };
+function glossify(text){ return esc(text).replace(/\[(.+?)\]/g,(m,w)=> GLOSS[w.toLowerCase()] ? `<span class="gw" data-w="${esc(w)}">${w}</span>` : w); }
+const plain = t => t.replace(/\[|\]/g,'');
+function qPrompt(p){ return esc(p).replace(/___/g,'<span class="blank">?</span>'); }
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+let toastT; function toast(m){ let t=document.querySelector('.toast'); if(!t){t=document.createElement('div');t.className='toast';document.body.appendChild(t);} t.textContent=m; clearTimeout(toastT); toastT=setTimeout(()=>t.remove(),2600); }
+let lang = store.get('em.lang',0);
+
+let AC=null, SOUND=true;
+function beep(type){ if(!SOUND) return; try{ AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+  const seq={ok:[[523,.09],[659,.09],[784,.18]],bad:[[220,.18],[175,.25]],tick:[[880,.04]],join:[[660,.06],[990,.1]],drum:[[110,.12],[110,.12],[110,.12],[82,.4]],ev:[[392,.08],[523,.08],[659,.08],[1046,.22]]}[type]||[];
+  let t=AC.currentTime; seq.forEach(([f,d])=>{const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=f;g.gain.setValueAtTime(.16,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+d+.02);t+=d*.9;}); }catch(e){} }
+function speak(text,pitch=1,rate=.9){ try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(plain(text)); const vs=speechSynthesis.getVoices(); const v=vs.find(v=>/en-GB/i.test(v.lang))||vs.find(v=>/^en/i.test(v.lang)); if(v)u.voice=v; u.lang='en-GB'; u.rate=rate; u.pitch=pitch; speechSynthesis.speak(u);}catch(e){} }
+try{speechSynthesis.getVoices();}catch(e){}
+function confetti(n=160){ const c=$('confetti'),x=c.getContext('2d'); c.width=innerWidth;c.height=innerHeight; const cols=['#e2be78','#e5484d','#3e8ef7','#2fbf71','#f5a524','#fff'];
+  const P=Array.from({length:n},()=>({x:Math.random()*c.width,y:-20-Math.random()*c.height*.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*4,r:4+Math.random()*5,c:cols[Math.random()*cols.length|0],a:Math.random()*6}));
+  let f=0;(function loop(){x.clearRect(0,0,c.width,c.height);P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.a+=.1;x.save();x.translate(p.x,p.y);x.rotate(p.a);x.fillStyle=p.c;x.fillRect(-p.r/2,-p.r/2,p.r,p.r*.6);x.restore();});if(++f<240)requestAnimationFrame(loop);else x.clearRect(0,0,c.width,c.height);})(); }
+
+/* glossary tooltip */
+function showTip(el){ const g=GLOSS[el.dataset.w.toLowerCase()]; if(!g) return; const tip=$('tip'); tip.innerHTML=`<b>${esc(el.dataset.w)}</b>${g[lang]}`; tip.classList.remove('hidden'); const r=el.getBoundingClientRect(),tw=tip.offsetWidth; tip.style.left=Math.max(8,Math.min(innerWidth-tw-8,r.left+r.width/2-tw/2))+'px'; tip.style.top=Math.max(8,r.top-tip.offsetHeight-10)+'px'; clearTimeout(showTip.t); showTip.t=setTimeout(hideTip,2500); }
+function hideTip(){ $('tip').classList.add('hidden'); }
+document.addEventListener('click',e=>{ const g=e.target.closest('.gw'); if(g){ showTip(g); speak(g.dataset.w); } });
+addEventListener('scroll',hideTip,{passive:true});
+
+/* =========================================================
+   NETWORK  (PeerJS over the internet; BroadcastChannel with ?local for testing)
+   ========================================================= */
+const PREFIX='emystery-v1-';
+function wrapPeerConn(c){ const h={data:[],close:[]}; c.on('data',d=>h.data.forEach(f=>f(d))); const cl=()=>h.close.forEach(f=>f()); c.on('close',cl); c.on('error',cl);
+  return { send(d){ try{ if(c.open) c.send(d); }catch(e){} }, onData(f){h.data.push(f);}, onClose(f){h.close.push(f);}, close(){ try{c.close();}catch(e){} } }; }
+const Net = {
+  host(code, onConn){
+    if(LOCAL){ return new Promise(res=>{ const bc=new BroadcastChannel(PREFIX+code), conns={};
+      bc.onmessage=e=>{ const m=e.data; if(m.to!=='host') return;
+        if(m.type==='hello'){ const h={data:[],close:[]}; const conn={send(d){bc.postMessage({to:m.from,type:'data',data:d});},onData(f){h.data.push(f);},onClose(f){h.close.push(f);},close(){},_h:h}; conns[m.from]=conn; bc.postMessage({to:m.from,type:'ok'}); onConn(conn); }
+        else if(m.type==='data' && conns[m.from]) conns[m.from]._h.data.forEach(f=>f(m.data)); };
+      res(); }); }
+    return new Promise((res,rej)=>{ if(!window.Peer) return rej(new Error('nolib'));
+      const peer=new Peer(PREFIX+code,{debug:0}); let opened=false;
+      peer.on('open',()=>{opened=true;res(peer);});
+      peer.on('error',e=>{ if(!opened) rej(e); });
+      peer.on('disconnected',()=>{ try{peer.reconnect();}catch(e){} });
+      peer.on('connection',c=>{ c.on('open',()=>onConn(wrapPeerConn(c))); }); });
+  },
+  join(code){
+    if(LOCAL){ return new Promise((res,rej)=>{ const me=rid(), bc=new BroadcastChannel(PREFIX+code), h={data:[],close:[]}; let ok=false;
+      bc.onmessage=e=>{ const m=e.data; if(m.to!==me) return; if(m.type==='ok'){ ok=true; res({send(d){bc.postMessage({to:'host',from:me,type:'data',data:d});},onData(f){h.data.push(f);},onClose(f){h.close.push(f);},close(){bc.close();}}); } else if(m.type==='data') h.data.forEach(f=>f(m.data)); };
+      bc.postMessage({to:'host',from:me,type:'hello'}); setTimeout(()=>{ if(!ok) rej(new Error('notfound')); },1500); }); }
+    return new Promise((res,rej)=>{ if(!window.Peer) return rej(new Error('nolib'));
+      const peer=new Peer({debug:0}); let done=false; const fail=e=>{ if(!done){done=true; try{peer.destroy();}catch(_){} rej(e);} };
+      peer.on('error',e=>fail(e.type==='peer-unavailable'?new Error('notfound'):e));
+      peer.on('open',()=>{ const c=peer.connect(PREFIX+code,{reliable:true}); c.on('open',()=>{ done=true; res(wrapPeerConn(c)); }); setTimeout(()=>fail(new Error('timeout')),12000); }); });
+  }
+};
+
+/* =========================================================
+   GAME SCRIPT
+   ========================================================= */
+const STAGE_INFO = {
+  brief:{ic:'📂',t:'Briefing',sub:'Read the case file together.'},
+  talk:{ic:'🗣️',t:'Interrogation',sub:'Listen to the three suspects. Somebody is lying.'},
+  duel:{ic:'⚔️',t:'Grammar Duel',sub:'If at least half of the class answers correctly, the evidence is unlocked.'},
+  board:{ic:'📌',t:'Evidence Board',sub:'Look at the evidence. What really matters?'}
+};
+function buildSteps(level){
+  const steps=[]; const Q=LEVELS[level].q; let n=0;
+  ['brief','talk','duel','board'].forEach(st=>{ steps.push({k:'intro',st}); Q[st].forEach((q,i)=>{ steps.push({k:'q',st,i,n:n++}); steps.push({k:'reveal',st,i,n:n-1}); }); });
+  steps.push({k:'vote'},{k:'verdict'},{k:'podium'});
+  return steps;
+}
+function allQ(level){ const Q=LEVELS[level].q; return [...Q.brief,...Q.talk,...Q.duel,...Q.board]; }
+function publicQ(q){ // what players receive (no answer)
+  if(q.type==='order'){ const w=shuffle(q.w.slice()); if(w.join(' ')===q.w.join(' ')) w.reverse(); return {type:'order',p:q.p,w}; }
+  return {type:q.type,p:q.p,o:q.type==='tf'?['True','False']:q.o};
+}
+function isRight(q,ans){ if(ans==null) return false; if(q.type==='order') return Array.isArray(ans)&&ans.join(' ')===q.w.join(' '); if(q.type==='tf') return (ans===0)===q.a; return ans===q.a; }
+function rightIndex(q){ return q.type==='tf'?(q.a?0:1):q.a; }
+function rightText(q){ return q.type==='order'?q.w.join(' '):q.type==='tf'?(q.a?'True':'False'):q.o[q.a]; }
+
+/* =========================================================
+   START SCREEN
+   ========================================================= */
+function startScreen(){
+  $('app').innerHTML=`<div class="wrap"><div style="text-align:center;padding-top:30px" class="hero">
+    <div class="kicker">Case #001 · The Missing Diamond</div>
+    <h1 class="serif">ENGLISH<br><em>MYSTERY</em></h1>
+    <p class="muted" style="letter-spacing:.2em;text-transform:uppercase;font-size:13px">Battle mode · everyone plays on their own phone</p></div>
+    <div class="choose">
+      <div class="card" data-go="host"><div class="big">🖥️</div><h3 class="serif">I am the teacher</h3><p class="muted">Open the game on the big screen. Students join with a code or QR.</p></div>
+      <div class="card" data-go="join"><div class="big">📱</div><h3 class="serif">I am a player</h3><p class="muted">Enter the game code from the big screen and play against your classmates.</p></div>
+      <a class="card" href="?teams"><div class="big">👥</div><h3 class="serif">Teams, one screen</h3><p class="muted">No phones? Play in teams on one projector with turns and steals.</p></a>
+    </div></div>`;
+  document.querySelectorAll('[data-go]').forEach(el=>el.onclick=()=> el.dataset.go==='host'?Host.setup():Player.joinScreen());
+}
+
+/* =========================================================
+   HOST
+   ========================================================= */
+const Host = {
+  H:null, timer:null,
+  setup(){
+    const H=this.H={ code:null, players:{}, level:'beginner', qTime:20, step:-1, steps:[], answers:{}, qStart:0, evidence:[], votes:{}, lastGain:{}, lastRank:{} };
+    this.newRoom();
+  },
+  async newRoom(tries=0){
+    const H=this.H; H.code=String(Math.floor(10000+Math.random()*90000));
+    this.render();
+    try{ await Net.host(H.code, conn=>this.onConn(conn)); H.online=true; this.render(); }
+    catch(e){ if(e && e.type==='unavailable-id' && tries<5) return this.newRoom(tries+1);
+      H.netError = e && e.message==='nolib' ? 'Could not load the connection library. Check the internet.' : 'Could not create the room. Check the internet and reload the page.'; this.render(); }
+  },
+  onConn(conn){
+    let pid=null;
+    conn.onData(m=>{
+      if(!m||!m.t) return;
+      const H=this.H;
+      if(m.t==='join'){
+        pid=m.pid; const name=String(m.name||'Player').slice(0,16), av=AVATARS.includes(m.av)?m.av:'🦊';
+        let p=H.players[pid];
+        if(!p){ // same nickname taken by another device?
+          if(Object.values(H.players).some(x=>x.name.toLowerCase()===name.toLowerCase())){ conn.send({t:'error',msg:'This name is already taken. Choose another one.'}); return; }
+          p=H.players[pid]={pid,name,av,score:0,streak:0,correct:0};
+          if(H.step<0) beep('join');
+        }
+        p.conn=conn; p.online=true; p.seen=Date.now();
+        conn.send({t:'welcome',pid,name:p.name,av:p.av,score:p.score});
+        this.sendState(p); this.render();
+      } else if(!pid || !H.players[pid]) return;
+      const p=H.players[pid]; p.seen=Date.now(); p.online=true;
+      if(m.t==='answer') this.onAnswer(p,m);
+      if(m.t==='vote') { const st=this.cur(); if(st&&st.k==='vote'){ H.votes[pid]={s:m.s,m:m.m}; this.render(); conn.send({t:'voted'}); } }
+    });
+    conn.onClose(()=>{ if(pid&&this.H.players[pid]){ this.H.players[pid].online=false; this.render(); } });
+  },
+  cur(){ return this.H.steps[this.H.step]; },
+  list(){ return Object.values(this.H.players); },
+  ranked(){ return this.list().sort((a,b)=>b.score-a.score); },
+  rankOf(pid){ const r=this.ranked(); const p=this.H.players[pid]; return 1+r.findIndex(x=>x.score===p.score); },
+  broadcast(){ this.list().forEach(p=>this.sendState(p)); },
+  sendState(p){
+    const H=this.H, st=this.cur(); if(!p.conn) return;
+    if(!st){ p.conn.send({t:'state',k:'lobby'}); return; }
+    const L=LEVELS[H.level];
+    if(st.k==='intro'){
+      const payload={t:'state',k:'intro',st:st.st,info:STAGE_INFO[st.st]};
+      if(st.st==='brief') payload.text={story:L.story,mail:L.mail};
+      if(st.st==='talk') payload.talk=SUSPECTS.map(s=>({id:s.id,name:s.name,role:s.role,text:L.talk[s.id]}));
+      if(st.st==='board') payload.ev=EV_ORDER.filter(id=>H.evidence.includes(id)).map(id=>EVIDENCE[id]);
+      p.conn.send(payload);
+    } else if(st.k==='q'){
+      const left=Math.max(0,H.qTime*1000-(Date.now()-H.qStart));
+      p.conn.send({t:'state',k:'q',n:st.n,total:H.qTotal,q:H.pubQ,left,dur:H.qTime*1000,done:!!H.answers[p.pid]});
+    } else if(st.k==='reveal'){
+      const q=allQ(H.level)[st.n], a=H.answers[p.pid];
+      p.conn.send({t:'state',k:'reveal',ok:!!(a&&a.ok),answered:!!a,gain:H.lastGain[p.pid]||0,score:p.score,rank:this.rankOf(p.pid),of:this.list().length,streak:p.streak,right:rightText(q),ex:q.ex});
+    } else if(st.k==='vote'){
+      p.conn.send({t:'state',k:'vote',done:!!H.votes[p.pid],sus:SUSPECTS.map(s=>({id:s.id,name:s.name,role:s.role})),mot:MOTIVES});
+    } else if(st.k==='verdict'||st.k==='podium'){
+      const v=H.votes[p.pid]||{};
+      p.conn.send({t:'state',k:st.k,score:p.score,rank:this.rankOf(p.pid),of:this.list().length,thief:v.s==='emily',motive:v.m==='collector',gain:H.lastGain[p.pid]||0,confession:L.confession});
+    }
+  },
+  start(){
+    const H=this.H; if(!this.list().length) return;
+    H.steps=buildSteps(H.level); H.qTotal=allQ(H.level).length; H.step=-1;
+    this.list().forEach(p=>{p.score=0;p.streak=0;p.correct=0;}); H.evidence=[]; H.votes={};
+    this.next();
+  },
+  next(){
+    const H=this.H; clearInterval(this.timer); try{speechSynthesis.cancel();}catch(e){}
+    if(H.step>=H.steps.length-1) return;
+    H.step++; const st=this.cur();
+    if(st.k==='q'){ H.answers={}; H.pubQ=publicQ(allQ(H.level)[st.n]); H.qStart=Date.now(); this.timer=setInterval(()=>this.tick(),250); }
+    if(st.k==='reveal') this.score();
+    if(st.k==='verdict'){ this.scoreVotes(); beep('drum'); setTimeout(()=>{beep('ok');confetti();},900); }
+    if(st.k==='podium') setTimeout(()=>confetti(220),300);
+    this.render(); this.broadcast();
+    if(st.k==='intro' && st.st==='brief') setTimeout(()=>this.render(),50);
+  },
+  tick(){
+    const H=this.H, left=H.qTime*1000-(Date.now()-H.qStart);
+    const ring=$('ring'); if(ring){ const sec=Math.max(0,Math.ceil(left/1000)), C=2*Math.PI*64; ring.querySelector('.arc').setAttribute('stroke-dasharray',`${C*Math.max(0,left)/(H.qTime*1000)} ${C}`); const num=ring.querySelector('.num'); if(num.textContent!=String(sec)){ num.textContent=sec; if(sec<=5&&sec>0) beep('tick'); } ring.classList.toggle('low',sec<=5); }
+    const online=this.list().filter(p=>p.online), done=online.length && online.every(p=>H.answers[p.pid]);
+    if(left<=0 || done){ clearInterval(this.timer); setTimeout(()=>this.next(), done?600:0); }
+  },
+  onAnswer(p,m){
+    const H=this.H, st=this.cur(); if(!st||st.k!=='q'||m.n!==st.n||H.answers[p.pid]) return;
+    const q=allQ(H.level)[st.n], t=Date.now()-H.qStart; if(t>H.qTime*1000+1500) return;
+    let ans=m.a; if(q.type==='order' && Array.isArray(ans)) ans=ans.map(String);
+    H.answers[p.pid]={a:ans,t,ok:isRight(q,ans)};
+    p.conn.send({t:'locked'});
+    const el=$('answered'); if(el){ el.querySelector('.count').textContent=Object.keys(H.answers).length; }
+  },
+  score(){
+    const H=this.H, st=this.cur(), q=allQ(H.level)[st.n]; H.lastGain={};
+    H.lastRank={}; this.ranked().forEach((p,i)=>H.lastRank[p.pid]=i);
+    let okCount=0;
+    this.list().forEach(p=>{ const a=H.answers[p.pid];
+      if(a&&a.ok){ okCount++; p.streak++; p.correct++; const speed=Math.max(0,1-a.t/(H.qTime*1000)); const g=Math.round(500+500*speed)+100*Math.min(Math.max(p.streak-1,0),3); p.score+=g; H.lastGain[p.pid]=g; }
+      else p.streak=0; });
+    const total=Object.keys(H.answers).length; H.okCount=okCount; H.totalAns=total;
+    H.unlocked=null;
+    if(q.ev){ const enough = this.list().length ? okCount/this.list().length>=0.5 : false; if(enough && !H.evidence.includes(q.ev)){ H.evidence.push(q.ev); H.unlocked=q.ev; setTimeout(()=>beep('ev'),300);} else if(!enough) H.unlocked='none'; }
+    beep(okCount?'ok':'bad');
+  },
+  scoreVotes(){ const H=this.H; H.lastGain={}; this.list().forEach(p=>{ const v=H.votes[p.pid]; let g=0; if(v){ if(v.s==='emily') g+=1000; if(v.m==='collector') g+=500; } p.score+=g; H.lastGain[p.pid]=g; }); },
+
+  /* ---------- host rendering ---------- */
+  render(){
+    const H=this.H, st=this.cur();
+    const url=location.origin+location.pathname+'?join='+H.code+(LOCAL?'&local':'');
+    const bar=`<div class="hbar"><div class="row"><div class="serif" style="font-size:22px;font-weight:800">English Mystery <span class="muted" style="font-size:14px;font-family:Inter">· Battle · ${LEVELS[H.level].label}</span></div></div>
+      <div class="row">${st?`<div class="code-pill"><span class="muted">Join code</span><b>${H.code}</b></div><div class="code-pill">👥 <b style="font-size:20px">${this.list().filter(p=>p.online).length}</b></div>`:''}
+      <button class="btn" data-h="lang">${lang?'KZ':'RU'}</button><button class="btn" data-h="sound">${SOUND?'🔊':'🔈'}</button><button class="btn" data-h="full">⛶</button></div></div>`;
+    let body='';
+    if(!st) body=this.lobbyHtml(url);
+    else if(st.k==='intro') body=this.introHtml(st);
+    else if(st.k==='q') body=this.qHtml(st);
+    else if(st.k==='reveal') body=this.revealHtml(st);
+    else if(st.k==='vote') body=this.voteHtml();
+    else if(st.k==='verdict') body=this.verdictHtml();
+    else if(st.k==='podium') body=this.podiumHtml();
+    const nextLbl = !st?'':st.k==='q'?'Skip timer ⏭':st.k==='podium'?'':st.k==='vote'?'Reveal the truth 🥁':'Next →';
+    $('app').innerHTML=`<div class="wrap">${bar}${body}</div>${nextLbl?`<button class="btn btn-gold hostnext" data-h="next">${nextLbl} <kbd style="color:#1a1206;border-color:rgba(0,0,0,.3)">Space</kbd></button>`:''}`;
+    if($('qr') && !window.QRCode) $('qr').remove();
+    if(!st && H.online && window.QRCode && $('qr')){ try{ new QRCode($('qr'),{text:url,width:200,height:200,correctLevel:QRCode.CorrectLevel.M}); }catch(e){} }
+    if(st&&st.k==='q') this.tick();
+  },
+  lobbyHtml(url){
+    const H=this.H, ps=this.list();
+    return `<div class="lobby"><div class="card join-box">
+      <div class="kicker">Join the investigation</div>
+      ${H.netError?`<p class="err" style="font-size:18px">${esc(H.netError)}</p><button class="btn" data-h="retry">Try again</button>`:
+       H.online?`<p class="muted" style="margin:10px 0 0">Open on your phone:</p><div class="url"><b>${esc(location.host+location.pathname)}</b></div><p class="muted" style="margin:6px 0 0">and enter the code</p><div class="code">${H.code}</div><div id="qr"></div><p class="muted" style="font-size:14px">or scan the QR code</p>`
+       :`<p class="muted" style="font-size:18px;margin-top:30px">Creating the room…</p>`}
+    </div>
+    <div class="card"><div class="row" style="justify-content:space-between"><div><div class="kicker">Detectives</div><div class="count">${ps.length}</div></div>
+      <button class="btn btn-gold" data-h="start" ${ps.length?'':'disabled'} style="font-size:18px;padding:14px 26px">Start the game →</button></div>
+      <div class="chips" style="margin-top:12px">${ps.length?ps.map(p=>`<div class="chip ${p.online?'':'off'}"><span class="av">${p.av}</span>${esc(p.name)}</div>`).join(''):'<p class="muted">Waiting for players…</p>'}</div>
+      <label class="lb">Level</label><div class="seg">${Object.keys(LEVELS).map(k=>`<button class="${H.level===k?'on':''}" data-h="lvl" data-v="${k}">${LEVELS[k].label}</button>`).join('')}</div>
+      <label class="lb">Time per question</label><div class="seg">${[15,20,30,45].map(s=>`<button class="${H.qTime===s?'on':''}" data-h="time" data-v="${s}">${s} s</button>`).join('')}</div>
+      <p class="muted" style="font-size:13px;line-height:1.6;margin-top:16px">Points: correct answer = 500–1000 (faster = more) · answer streak = bonus · at the end: right thief +1000, right motive +500.</p>
+    </div></div>`;
+  },
+  introHtml(st){
+    const H=this.H, L=LEVELS[H.level], info=STAGE_INFO[st.st]; let b='';
+    if(st.st==='brief') b=`<div class="story">${L.story.map(p=>`<p style="margin:0 0 10px">${glossify(p)}</p>`).join('')}</div><div class="email"><b class="muted">From: Alexander Hart · Subject: Please help me</b><br>${glossify(L.mail)}</div><div class="row" style="margin-top:14px"><button class="btn" data-h="say" data-v="brief">🔊 Listen</button></div>`;
+    if(st.st==='talk') b=`<div class="sus3">${SUSPECTS.map(s=>`<div class="susc"><div class="hd">${portrait(s.id)}<div><b style="font-size:18px">${s.name}</b><div class="muted" style="font-size:13px">${s.role}</div><button class="btn" style="padding:6px 12px;font-size:13px;margin-top:6px" data-h="say" data-v="${s.id}">🔊 Listen</button></div></div><p>“${glossify(L.talk[s.id])}”</p></div>`).join('')}</div>`;
+    if(st.st==='duel') b=`<p style="font-size:22px;line-height:1.6">Six pieces of evidence are locked in the police lab.<br>For each question: if <b style="color:var(--gold)">at least half of the class</b> is right, the evidence is unlocked for everybody.</p>${this.boardHtml()}`;
+    if(st.st==='board') b=`<p style="font-size:22px">The class unlocked <b style="color:var(--gold)">${H.evidence.length} of 6</b> pieces of evidence. Discuss: who had the chance, the reason and the keys?</p>${this.boardHtml()}`;
+    return `<div class="card"><div class="stagehead"><div class="kicker">Stage ${['brief','talk','duel','board'].indexOf(st.st)+1} of 5</div><h2 class="serif">${info.ic} ${info.t}</h2><p class="muted" style="margin:0 0 16px;font-size:18px">${info.sub}</p></div>${b}</div>`;
+  },
+  boardHtml(){ const H=this.H, rots=[-3,2,-1.5,3,-2.5,1.5];
+    return `<div class="board" style="margin-top:14px"><div class="board-grid">${EV_ORDER.map((id,i)=>{const on=H.evidence.includes(id),e=EVIDENCE[id];return `<div class="pin ${on?'':'locked'}" style="--rot:${rots[i]}deg"><div style="font-size:26px">${on?e.ic:'🔒'}</div><h5>${on?e.t:'Locked'}</h5><p>${on?esc(e.d):'Answer correctly to unlock.'}</p></div>`;}).join('')}</div></div>`; },
+  qHtml(st){
+    const H=this.H, q=H.pubQ, n=Object.keys(H.answers).length;
+    const C=2*Math.PI*64;
+    const opts = q.type==='order' ? `<div class="tiles" style="justify-content:flex-start">${q.w.map(w=>`<span class="tile" style="font-size:24px">${esc(w)}</span>`).join('')}</div><p class="muted" style="margin-top:14px">Put the words in the right order on your phone.</p>`
+      : `<div class="answers">${q.o.map((o,i)=>`<div class="ans" style="--c:${ACOL[i]}"><span class="sh">${SHAPES[i]}</span>${esc(o)}</div>`).join('')}</div>`;
+    const qq=allQ(H.level)[st.n];
+    return `<div class="qhost"><div class="card"><div class="kicker">${STAGE_INFO[st.st].ic} ${STAGE_INFO[st.st].t} · Question ${st.n+1} / ${H.qTotal}</div>
+      ${qq.ev?`<p class="muted" style="margin:8px 0 0">🔒 Evidence at stake: <b style="color:var(--gold)">${EVIDENCE[qq.ev].t}</b></p>`:''}
+      <div class="qtext">${qPrompt(q.p)}</div>${opts}</div>
+      <div class="side-stat"><div class="card"><div class="ring" id="ring"><svg width="150" height="150"><circle cx="75" cy="75" r="64" stroke="rgba(255,255,255,.08)" stroke-width="10" fill="none"/><circle class="arc" cx="75" cy="75" r="64" stroke="var(--gold)" stroke-width="10" fill="none" stroke-linecap="round" stroke-dasharray="${C} ${C}"/></svg><div class="num">${H.qTime}</div></div></div>
+      <div class="card answered" id="answered"><div class="count">${n}</div><div class="muted">of ${this.list().filter(p=>p.online).length} answered</div></div></div></div>`;
+  },
+  revealHtml(st){
+    const H=this.H, q=allQ(H.level)[st.n], pq=H.pubQ;
+    let opts='';
+    if(q.type!=='order'){ const counts=pq.o.map((_,i)=>Object.values(H.answers).filter(a=>a.a===i).length), tot=Math.max(1,H.totalAns), ri=rightIndex(q);
+      opts=`<div class="answers">${pq.o.map((o,i)=>`<div class="ans ${i===ri?'right':'dim'}" style="--c:${ACOL[i]};--w:${100*counts[i]/tot}%"><span class="sh">${i===ri?'✓':SHAPES[i]}</span>${esc(o)}<span class="cnt">${counts[i]}</span><span class="barfill"></span></div>`).join('')}</div>`; }
+    else opts=`<div class="explain" style="background:rgba(226,190,120,.1);border-color:var(--line)"><b>Answer:</b> ${esc(q.w.join(' '))}</div>`;
+    const ev = H.unlocked && H.unlocked!=='none' ? `<div class="ev-line">🔓 Evidence unlocked: ${EVIDENCE[H.unlocked].ic} ${EVIDENCE[H.unlocked].t}</div>` : H.unlocked==='none' ? `<div class="ev-line" style="color:var(--bad)">🔒 Less than half were right — the ${EVIDENCE[q.ev].t} stays locked.</div>`:'';
+    const r=this.ranked(), top=r.slice(0,5);
+    return `<div class="qhost"><div class="card"><div class="kicker">Question ${st.n+1} / ${H.qTotal} · ${H.okCount} of ${this.list().length} correct</div><div class="qtext" style="font-size:clamp(22px,2.6vw,34px)">${qPrompt(q.p)}</div>${opts}<div class="explain">📘 ${q.ex}</div>${ev}</div>
+      <div class="card"><div class="kicker" style="margin-bottom:10px">Leaderboard</div><div class="lb-list">${top.map((p,i)=>{const was=H.lastRank[p.pid], mv=was>i?'⬆️':''; return `<div class="lb-row ${i===0?'top1':''}"><span class="pos">${i+1}</span><span class="av">${p.av}</span><span>${esc(p.name)} ${mv}${p.streak>=2?`<span class="streak"> 🔥${p.streak}</span>`:''}</span><span class="sc">${p.score}${H.lastGain[p.pid]?`<span class="gain">+${H.lastGain[p.pid]}</span>`:''}</span></div>`;}).join('')}</div>
+      ${r.length>5?`<p class="muted" style="font-size:13px;margin-top:10px">+ ${r.length-5} more detectives</p>`:''}</div></div>`;
+  },
+  voteHtml(){
+    const H=this.H, n=Object.keys(H.votes).length, on=this.list().length;
+    return `<div class="card" style="text-align:center"><div class="kicker">Final stage · Accusation</div><h2 class="serif" style="font-size:44px;margin:8px 0">⚖️ Who stole the diamond?</h2>
+      <p class="muted" style="font-size:20px">Vote on your phone: the <b style="color:var(--gold)">thief</b> (+1000) and the <b style="color:var(--gold)">motive</b> (+500).</p>
+      <div class="row" style="justify-content:center;gap:28px;margin:20px 0">${SUSPECTS.map(s=>`<div style="text-align:center"><div style="width:120px">${portrait(s.id)}</div><b>${s.name}</b><div class="muted" style="font-size:13px">${s.role}</div></div>`).join('')}</div>
+      <div class="count" style="color:var(--gold)">${n} / ${on}</div><div class="muted">votes</div></div>`;
+  },
+  verdictHtml(){
+    const H=this.H, L=LEVELS[H.level], tot=Math.max(1,Object.keys(H.votes).length);
+    const bars=SUSPECTS.map(s=>{const c=Object.values(H.votes).filter(v=>v.s===s.id).length; return `<div class="vb ${s.id==='emily'?'guilty':''}"><span class="nm">${s.name}</span><span class="tr"><span class="fl" style="--w:${100*c/tot}%;display:block"></span></span><b>${c}</b></div>`;}).join('');
+    return `<div class="card verdict"><div class="kicker">The truth</div><div class="pt" style="margin-top:10px">${portrait('emily')}<div class="stamp">GUILTY</div></div>
+      <h2 class="serif" style="font-size:36px;margin:8px 0 2px">Emily, the Museum Assistant</h2><p class="muted" style="margin:0">Motive: she planned to sell the diamond to a private collector.</p>
+      <p class="serif" style="font-size:22px;font-style:italic;line-height:1.6;max-width:760px;margin:16px auto;color:#f1e6cf">${esc(L.confession)}</p>
+      <button class="btn" data-h="say" data-v="confession">🔊 Listen to the confession</button>
+      <div class="vote-bars">${bars}</div></div>`;
+  },
+  podiumHtml(){
+    const r=this.ranked(), top=[r[1],r[0],r[2]].filter(Boolean), max=Math.max(1,...r.map(p=>p.score)), md=['🥈','🥇','🥉'];
+    const order = r.length>=2 ? top : [r[0]];
+    return `<div style="text-align:center"><div class="kicker">Case closed</div><h1 class="serif" style="font-size:clamp(36px,6vw,60px);margin:6px 0 0">Best detective: <span style="color:var(--gold)">${esc(r[0].name)}</span></h1></div>
+      <div class="podium">${order.map(p=>{const i=r.indexOf(p);return `<div class="pod"><div class="av">${p.av}</div><div class="nm">${['🥇','🥈','🥉'][i]} ${esc(p.name)}</div><div class="bar" style="height:${70+170*p.score/max}px">${p.score}</div></div>`;}).join('')}</div>
+      <div class="card"><div class="kicker" style="margin-bottom:10px">All detectives</div><div class="lb-list">${r.map((p,i)=>`<div class="lb-row ${i===0?'top1':''}"><span class="pos">${i+1}</span><span class="av">${p.av}</span><span>${esc(p.name)} <span class="muted" style="font-size:14px">· ${p.correct}/${this.H.qTotal} correct</span></span><span class="sc">${p.score}</span></div>`).join('')}</div></div>
+      <div class="row" style="justify-content:center;margin:20px 0 60px"><button class="btn btn-gold" data-h="again">Play again with the same players</button></div>`;
+  },
+  click(a,v){
+    const H=this.H;
+    if(a==='start') this.start();
+    else if(a==='next') this.next();
+    else if(a==='lvl'){ H.level=v; this.render(); }
+    else if(a==='time'){ H.qTime=+v; this.render(); }
+    else if(a==='retry'){ H.netError=null; this.newRoom(); }
+    else if(a==='lang'){ lang=1-lang; store.set('em.lang',lang); this.render(); }
+    else if(a==='sound'){ SOUND=!SOUND; this.render(); }
+    else if(a==='full'){ try{ document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen(); }catch(e){} }
+    else if(a==='again'){ H.step=-1; H.steps=[]; this.render(); this.broadcast(); }
+    else if(a==='say'){ const L=LEVELS[H.level]; if(v==='brief') speak(L.story.join(' ')+' '+L.mail,1,H.level==='beginner'?.82:.95); else if(v==='confession') speak(L.confession,1.25); else speak(L.talk[v],SUSPECTS.find(s=>s.id===v).pitch); }
+  }
+};
+
+/* =========================================================
+   PLAYER
+   ========================================================= */
+const Player = {
+  P:null, conn:null,
+  joinScreen(err){
+    const saved=store.get('em.player',{}); let spid=null; try{spid=sessionStorage.getItem('em.pid'); if(!spid){spid=rid(); sessionStorage.setItem('em.pid',spid);}}catch(e){spid=rid();}
+    const P=this.P=this.P||{pid:spid, name:saved.name||'', av:saved.av||AVATARS[Math.random()*AVATARS.length|0], code:params.get('join')||''};
+    $('app').innerHTML=`<div class="ph"><div style="text-align:center;margin:14px 0 18px"><div class="kicker">English Mystery · Battle</div><h1 class="serif" style="font-size:38px;margin:6px 0 0">Join the case</h1></div>
+      <label class="lb">Game code</label><input class="txt" id="code" inputmode="numeric" maxlength="5" placeholder="12345" value="${esc(P.code)}" style="font-size:30px;letter-spacing:.2em;text-align:center;font-family:Fraunces,serif">
+      <label class="lb">Your name</label><input class="txt" id="nm" maxlength="16" placeholder="Name" value="${esc(P.name)}">
+      <label class="lb">Your detective</label><div class="avs">${AVATARS.map(a=>`<button class="${P.av===a?'on':''}" data-av="${a}">${a}</button>`).join('')}</div>
+      <label class="lb">Translations</label><div class="seg"><button class="${lang===0?'on':''}" data-lg="0">Русский</button><button class="${lang===1?'on':''}" data-lg="1">Қазақша</button></div>
+      <div class="err" id="err">${err?esc(err):''}</div>
+      <button class="btn btn-gold" id="go" style="width:100%;font-size:20px;padding:16px;margin-top:8px">Join →</button></div>`;
+    document.querySelectorAll('[data-av]').forEach(b=>b.onclick=()=>{P.av=b.dataset.av; P.code=$('code').value; P.name=$('nm').value; this.joinScreen();});
+    document.querySelectorAll('[data-lg]').forEach(b=>b.onclick=()=>{lang=+b.dataset.lg; store.set('em.lang',lang); P.code=$('code').value; P.name=$('nm').value; this.joinScreen();});
+    $('go').onclick=()=>this.connect();
+  },
+  async connect(silent){
+    const P=this.P;
+    if(!silent){ P.code=$('code').value.trim(); P.name=$('nm').value.trim(); }
+    if(!/^\d{5}$/.test(P.code)) return this.joinScreen('Enter the 5-digit code from the big screen.');
+    if(!P.name) return this.joinScreen('Write your name.');
+    store.set('em.player',{name:P.name,av:P.av});
+    if(!silent){ const g=$('go'); g.disabled=true; g.textContent='Connecting…'; }
+    try{
+      const c=await Net.join(P.code); this.conn=c; this.lost=false;
+      c.onData(m=>this.onMsg(m)); c.onClose(()=>this.onLost());
+      c.send({t:'join',pid:P.pid,name:P.name,av:P.av});
+      clearInterval(this.hb); this.hb=setInterval(()=>c.send({t:'ping'}),5000);
+    }catch(e){
+      if(silent) return setTimeout(()=>this.connect(true),3000);
+      this.joinScreen(e.message==='notfound'?'Game not found. Check the code.':e.message==='nolib'?'No internet connection.':'Could not connect. Try again.');
+    }
+  },
+  onLost(){ if(this.lost) return; this.lost=true; clearInterval(this.hb); const b=document.createElement('div'); b.className='conn'; b.id='connbar'; b.textContent='Reconnecting…'; document.body.appendChild(b); setTimeout(()=>this.connect(true),1500); },
+  onMsg(m){
+    const P=this.P; const cb=$('connbar'); if(cb) cb.remove();
+    if(m.t==='error'){ this.conn&&this.conn.close(); this.joinScreen(m.msg); return; }
+    if(m.t==='welcome'){ P.name=m.name; P.av=m.av; P.score=m.score; return; }
+    if(m.t==='locked'){ this.S.done=true; this.render(); return; }
+    if(m.t==='voted'){ this.S.done=true; this.render(); return; }
+    if(m.t==='state'){ this.S=m; if(m.score!=null) P.score=m.score; if(m.k==='lobby') P.score=0;
+      if(m.k==='q'){ this.deadline=Date.now()+m.left; this.order=[]; this.pick=null; }
+      if(m.k==='vote'){ this.vs=this.vs||{}; }
+      if(m.k==='reveal'){ beep(m.ok?'ok':'bad'); if(navigator.vibrate) try{navigator.vibrate(m.ok?60:[60,60,60]);}catch(e){} if(m.ok) confetti(40); }
+      if(m.k==='podium' && m.rank<=3) confetti(200);
+      this.render(); }
+  },
+  top(){ const P=this.P; return `<div class="ph-top"><div class="me"><span class="av">${P.av}</span>${esc(P.name)}</div><div class="score-pill">${P.score||0}</div></div>`; },
+  render(){
+    const S=this.S, P=this.P; clearInterval(this.pt);
+    let b='';
+    if(!S||S.k==='lobby') b=`<div class="center"><div class="big">${P.av}</div><h2 class="serif">You're in!</h2><p class="muted">Look at the big screen. The game will start soon.</p></div>`;
+    else if(S.k==='intro'){
+      let t='';
+      if(S.text) t=`<div class="ptext">${S.text.story.map(p=>`<p>${glossify(p)}</p>`).join('')}<p style="font-family:Inter;font-size:16px">${glossify(S.text.mail)}</p></div>`;
+      if(S.talk) t=S.talk.map(s=>`<div class="susc" style="margin-bottom:10px"><div class="hd">${portrait(s.id)}<div><b>${s.name}</b><div class="muted" style="font-size:12px">${s.role}</div></div></div><p>“${glossify(s.text)}”</p></div>`).join('');
+      if(S.ev) t=S.ev.length?S.ev.map(e=>`<div class="susc" style="margin-bottom:8px"><b>${e.ic} ${e.t}</b><p style="font-family:Inter;font-size:15px;margin-top:4px">${esc(e.d)}</p></div>`).join(''):'<p class="muted">No evidence was unlocked.</p>';
+      b=`<div style="text-align:center;margin-bottom:12px"><div style="font-size:44px">${S.info.ic}</div><h2 class="serif" style="margin:4px 0">${S.info.t}</h2><p class="muted" style="margin:0">${S.info.sub}</p></div>${t}${t&&(S.text||S.talk)?'<p class="muted" style="font-size:13px;text-align:center">Tap gold words to see the translation.</p>':''}`;
+    }
+    else if(S.k==='q'){
+      const q=S.q;
+      if(S.done) b=`<div class="center"><div class="big">⏳</div><h2 class="serif">Answer locked!</h2><p class="muted">Wait for the others…</p></div>`;
+      else {
+        const opts = q.type==='order'
+          ? `<div class="aline">${this.order.map((wi,k)=>`<button class="tile" data-un="${k}">${esc(q.w[wi])}</button>`).join('')}</div><div class="tiles">${q.w.map((w,i)=>`<button class="tile ${this.order.includes(i)?'used':''}" data-pl="${i}">${esc(w)}</button>`).join('')}</div><button class="btn btn-gold" id="send" style="width:100%;margin-top:16px;font-size:18px" ${this.order.length===q.w.length?'':'disabled'}>Send answer</button>`
+          : `<div class="pans ${q.o.length>2&&q.o.every(o=>o.length<14)?'grid2':''}">${q.o.map((o,i)=>`<button class="pbtn" style="--c:${ACOL[i]}" data-ans="${i}"><span class="sh">${SHAPES[i]}</span>${esc(o)}</button>`).join('')}</div>`;
+        b=`<div class="pbar"><i id="pbar"></i></div><div class="muted" style="font-size:13px;font-weight:700">Question ${S.n+1} / ${S.total}</div><div class="pq">${qPrompt(q.p)}</div>${opts}`;
+      }
+    }
+    else if(S.k==='reveal'){
+      b=`<div class="res ${S.ok?'ok':'bad'}" style="text-align:center"><div class="big" style="font-size:64px">${S.ok?'✅':S.answered?'❌':'⌛'}</div>
+        <h2 class="serif" style="margin:8px 0">${S.ok?'Correct!':S.answered?'Not this time':'Too late!'}</h2>
+        <div class="pts">${S.ok?'+'+S.gain:'+0'}</div>${S.ok&&S.streak>=2?`<div style="color:#ffb44d;font-weight:800">🔥 Streak ×${S.streak}</div>`:''}
+        <div class="rk">You are #${S.rank} of ${S.of}</div>
+        ${S.ok?'':`<div class="ex"><b>Right answer:</b> ${esc(S.right)}<br>${S.ex}</div>`}</div>`;
+    }
+    else if(S.k==='vote'){
+      const v=this.vs;
+      b = S.done ? `<div class="center"><div class="big">🗳️</div><h2 class="serif">Vote sent!</h2><p class="muted">Look at the big screen for the truth…</p></div>`
+        : `<h2 class="serif" style="margin:0 0 4px">Who is the thief?</h2><p class="muted" style="margin:0 0 12px">+1000 for the right thief</p>
+          <div class="psus">${S.sus.map(s=>`<button class="${v.s===s.id?'on':''}" data-vs="${s.id}">${portrait(s.id)}${s.name}</button>`).join('')}</div>
+          <h3 class="serif" style="margin:18px 0 0">Why? <span class="muted" style="font-family:Inter;font-size:14px">+500</span></h3>
+          <div class="pmot">${S.mot.map(m=>`<button class="${v.m===m.id?'on':''}" data-vm="${m.id}">${esc(m.t)}</button>`).join('')}</div>
+          <button class="btn btn-gold" id="vote" style="width:100%;margin-top:16px;font-size:18px" ${v.s&&v.m?'':'disabled'}>Send my accusation</button>`;
+    }
+    else if(S.k==='verdict'){
+      b=`<div class="center"><div style="width:150px;margin:0 auto" class="pt">${portrait('emily')}</div><h2 class="serif">Emily is guilty!</h2>
+        <p style="font-size:18px">${S.thief?'✅ You found the thief':'❌ Wrong suspect'}<br>${S.motive?'✅ Right motive':'❌ Wrong motive'}</p>
+        <div class="res-pts serif" style="font-size:40px;font-weight:800;color:var(--gold)">+${S.gain}</div><p class="muted">You are #${S.rank} of ${S.of}</p></div>`;
+    }
+    else if(S.k==='podium'){
+      b=`<div class="center"><div class="big">${['🥇','🥈','🥉'][S.rank-1]||'🕵️'}</div><h2 class="serif">${S.rank===1?'Best detective!':`#${S.rank} of ${S.of}`}</h2><div class="serif" style="font-size:48px;font-weight:800;color:var(--gold)">${S.score}</div><p class="muted">points · Case closed</p></div>`;
+    }
+    $('app').innerHTML=`<div class="ph">${this.top()}${b}</div>`;
+    this.bind();
+    if(S&&S.k==='q'&&!S.done){ const upd=()=>{const el=$('pbar'); if(!el) return; const left=Math.max(0,this.deadline-Date.now()); el.style.width=(100*left/S.dur)+'%';}; upd(); this.pt=setInterval(upd,250); }
+  },
+  bind(){
+    const S=this.S;
+    document.querySelectorAll('[data-ans]').forEach(b=>b.onclick=()=>{ if(S.done) return; this.conn.send({t:'answer',n:S.n,a:+b.dataset.ans}); S.done=true; this.render(); });
+    document.querySelectorAll('[data-pl]').forEach(b=>b.onclick=()=>{ this.order.push(+b.dataset.pl); this.render(); });
+    document.querySelectorAll('[data-un]').forEach(b=>b.onclick=()=>{ this.order.splice(+b.dataset.un,1); this.render(); });
+    const send=$('send'); if(send) send.onclick=()=>{ this.conn.send({t:'answer',n:S.n,a:this.order.map(i=>S.q.w[i])}); S.done=true; this.render(); };
+    document.querySelectorAll('[data-vs]').forEach(b=>b.onclick=()=>{ this.vs.s=b.dataset.vs; this.render(); });
+    document.querySelectorAll('[data-vm]').forEach(b=>b.onclick=()=>{ this.vs.m=b.dataset.vm; this.render(); });
+    const vote=$('vote'); if(vote) vote.onclick=()=>{ this.conn.send({t:'vote',s:this.vs.s,m:this.vs.m}); };
+  }
+};
+
+/* host clicks + keys */
+document.addEventListener('click',e=>{ const b=e.target.closest('[data-h]'); if(b && Host.H && !b.disabled) Host.click(b.dataset.h,b.dataset.v); });
+document.addEventListener('keydown',e=>{ if(!Host.H||e.target.tagName==='INPUT') return; if(e.key===' '||e.key==='Enter'){ e.preventDefault(); const st=Host.cur(); if(!st) Host.start(); else if(st.k!=='podium') Host.next(); } });
+/* host: mark players offline if silent */
+setInterval(()=>{ if(!Host.H) return; let ch=false; Object.values(Host.H.players).forEach(p=>{ const off=Date.now()-p.seen>15000; if(p.online&&off){p.online=false;ch=true;} }); if(ch&&!Host.cur()) Host.render(); },3000);
+
+const CLASS_MODE_HTML = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<title>English Mystery \u2014 Class Mode<\/title>\n<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n<link href=\"https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Inter:wght@400;500;600;700&display=swap\" rel=\"stylesheet\">\n<style>\n:root{\n  --bg:#070b16; --panel:#0f172a; --panel2:#131d35; --line:rgba(226,190,120,.18);\n  --gold:#e2be78; --gold2:#b8893f; --text:#eef1f7; --muted:#9aa6bd;\n  --ok:#3ccf91; --bad:#ff6b6b; --warn:#ffcc5c;\n  --t0:#ff6b6b; --t1:#4dabf7; --t2:#51cf66; --t3:#cc5de8;\n  --r:18px;\n}\n*{box-sizing:border-box}\nhtml,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif}\nbody{background:radial-gradient(1200px 600px at 15% -10%,rgba(226,190,120,.10),transparent 60%),radial-gradient(900px 500px at 110% 10%,rgba(77,171,247,.08),transparent 60%),var(--bg);min-height:100vh}\nbutton{font:inherit;color:inherit;cursor:pointer}\n.serif{font-family:Fraunces,Georgia,serif}\n.wrap{max-width:1180px;margin:0 auto;padding:18px 18px 40px}\n.kicker{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:700}\n.muted{color:var(--muted)}\n.card{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.01));border:1px solid var(--line);border-radius:var(--r);padding:22px}\n.btn{border:1px solid var(--line);background:rgba(255,255,255,.04);border-radius:999px;padding:12px 22px;font-weight:600;transition:.15s}\n.btn:hover{border-color:var(--gold);transform:translateY(-1px)}\n.btn-gold{background:linear-gradient(180deg,#f0d394,#c99a4b);color:#1a1206;border:none;box-shadow:0 8px 24px rgba(226,190,120,.25)}\n.btn-gold:hover{filter:brightness(1.06)}\n.btn-sm{padding:8px 14px;font-size:14px}\n.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}\n.hidden{display:none!important}\n\n/* ---------- top bar ---------- */\n.topbar{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px}\n.brand{display:flex;align-items:center;gap:12px}\n.brand .logo{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);display:grid;place-items:center;color:var(--gold);font-size:20px}\n.brand h1{margin:0;font-size:20px;line-height:1.1}\n.brand small{color:var(--muted);font-size:12px}\n.tools{display:flex;gap:8px}\n.icon-btn{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03);display:grid;place-items:center;font-size:18px}\n.icon-btn.on{border-color:var(--gold);color:var(--gold)}\n\n.scoreboard{display:grid;grid-template-columns:repeat(var(--n,2),1fr);gap:10px;margin-bottom:12px}\n.team{position:relative;border-radius:16px;padding:12px 16px;border:2px solid transparent;background:rgba(255,255,255,.035);display:flex;align-items:center;justify-content:space-between;gap:10px;transition:.25s;overflow:hidden}\n.team::before{content:\"\";position:absolute;inset:0 auto 0 0;width:6px;background:var(--c)}\n.team .name{font-weight:700;font-size:16px;padding-left:6px}\n.team .pts{font-family:Fraunces,serif;font-size:30px;font-weight:800}\n.team.active{border-color:var(--c);background:color-mix(in srgb,var(--c) 16%,transparent);box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 18%,transparent)}\n.team.active .name::after{content:\" \u00b7 your turn\";font-weight:500;font-size:12px;color:var(--c)}\n.team .plus{position:absolute;right:56px;top:8px;font-weight:800;color:var(--ok);opacity:0}\n.team .plus.show{animation:plus 1.1s ease-out}\n@keyframes plus{0%{opacity:0;transform:translateY(8px)}20%{opacity:1}100%{opacity:0;transform:translateY(-18px)}}\n\n.track{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px}\n.step{border-radius:12px;padding:10px 8px;text-align:center;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);color:var(--muted)}\n.step .ic{display:block;font-size:20px;margin-bottom:2px}\n.step.done{color:var(--gold);border-color:var(--line)}\n.step.now{background:linear-gradient(180deg,#f0d394,#c99a4b);color:#1a1206;border-color:transparent}\n\n/* ---------- layout ---------- */\n.stage{display:grid;grid-template-columns:1fr 330px;gap:16px}\n@media (max-width:900px){.stage{grid-template-columns:1fr}.track .lbl{display:none}}\n@media (max-width:640px){.team.active .name::after{content:\"\"}.team .pts{font-size:24px}.btn{white-space:nowrap}}\n.side .card{padding:18px}\n.side h3{margin:0 0 10px;font-size:16px}\n.notes li{margin:6px 0;color:var(--muted);font-size:14px}\n.notes b{color:var(--text)}\n\n.q-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:12px}\n.q-head h2{margin:4px 0 0;font-size:30px;line-height:1.15}\n.turn-pill{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:6px 12px;font-weight:700;font-size:14px;background:color-mix(in srgb,var(--c) 18%,transparent);color:var(--c);border:1px solid color-mix(in srgb,var(--c) 50%,transparent)}\n.turn-pill .dot{width:9px;height:9px;border-radius:50%;background:var(--c)}\n\n.timer{--p:1;position:relative;width:74px;height:74px;flex:none}\n.timer svg{transform:rotate(-90deg)}\n.timer .num{position:absolute;inset:0;display:grid;place-items:center;font-family:Fraunces,serif;font-size:24px;font-weight:800}\n.timer.low .num{color:var(--bad)}\n.timer.low{animation:pulse .8s infinite}\n@keyframes pulse{50%{transform:scale(1.06)}}\n\n.prompt{font-size:26px;line-height:1.45;margin:10px 0 18px}\n.prompt .blank{display:inline-block;min-width:90px;border-bottom:3px dashed var(--gold);text-align:center;color:var(--gold)}\n.type-tag{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}\n\n.options{display:grid;grid-template-columns:1fr 1fr;gap:12px}\n@media (max-width:640px){.options{grid-template-columns:1fr}.prompt{font-size:21px}.q-head h2{font-size:24px}}\n.opt{display:flex;align-items:center;gap:14px;text-align:left;border-radius:16px;padding:18px;border:2px solid rgba(255,255,255,.08);background:rgba(255,255,255,.035);font-size:20px;font-weight:600;transition:.15s;min-height:72px}\n.opt:hover:not(:disabled){border-color:var(--gold);transform:translateY(-2px)}\n.opt .k{width:34px;height:34px;flex:none;border-radius:10px;display:grid;place-items:center;font-size:15px;background:rgba(255,255,255,.07);color:var(--gold)}\n.opt.right{border-color:var(--ok);background:rgba(60,207,145,.14)}\n.opt.wrong{border-color:var(--bad);background:rgba(255,107,107,.12);opacity:.75}\n.opt:disabled{cursor:default}\n.opt.right .k{background:var(--ok);color:#04130c}\n.opt.wrong .k{background:var(--bad);color:#200}\n\n.tiles{display:flex;flex-wrap:wrap;gap:10px;min-height:64px}\n.answer-line{border:2px dashed var(--line);border-radius:16px;padding:12px;margin-bottom:14px;min-height:68px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}\n.answer-line:empty::before{content:\"Tap the words in the right order\u2026\";color:var(--muted)}\n.tile{border-radius:12px;padding:12px 16px;font-size:20px;font-weight:600;background:#1b2747;border:1px solid rgba(255,255,255,.1)}\n.tile:hover{border-color:var(--gold)}\n.tile.used{visibility:hidden}\n\n.banner{margin-top:16px;border-radius:16px;padding:16px 18px;display:flex;gap:14px;align-items:flex-start;animation:rise .3s ease-out}\n@keyframes rise{from{opacity:0;transform:translateY(8px)}}\n.banner .big{font-size:28px;line-height:1}\n.banner h4{margin:0 0 4px;font-size:18px}\n.banner p{margin:0;color:#d5dbe7;line-height:1.5}\n.banner.ok{background:rgba(60,207,145,.12);border:1px solid rgba(60,207,145,.4)}\n.banner.bad{background:rgba(255,107,107,.1);border:1px solid rgba(255,107,107,.35)}\n.banner.steal{background:rgba(255,204,92,.1);border:1px solid rgba(255,204,92,.4)}\n.actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}\n\n/* ---------- story ---------- */\n.story{font-family:Fraunces,serif;font-size:23px;line-height:1.7}\n.story p{margin:0 0 14px}\n.gw{border-bottom:2px dotted var(--gold);cursor:help;position:relative;color:#fff2d6}\n.gw:hover,.gw.open{background:rgba(226,190,120,.12);border-radius:4px}\n.tip{position:fixed;z-index:50;background:#fff7e6;color:#1b1406;border-radius:12px;padding:10px 14px;font-family:Inter,sans-serif;font-size:15px;box-shadow:0 12px 30px rgba(0,0,0,.4);pointer-events:none;max-width:260px}\n.tip b{display:block;font-size:16px}\n.tip span{color:#6b5530}\n.email{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:rgba(255,255,255,.03);font-family:Inter,sans-serif;font-size:18px;line-height:1.6}\n.email .hd{font-size:13px;color:var(--muted);margin-bottom:6px}\n.listen{display:inline-flex;align-items:center;gap:8px}\n\n/* ---------- suspects ---------- */\n.suspects{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}\n.sus{border-radius:18px;padding:14px;border:2px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);text-align:center;transition:.15s}\n.sus:hover{border-color:var(--gold)}\n.sus.sel{border-color:var(--gold);background:rgba(226,190,120,.08)}\n.sus svg{width:96px;height:96px;display:block;margin:0 auto 8px}\n.sus strong{display:block;font-size:18px}\n.sus span{font-size:13px;color:var(--muted)}\n.sus .seen{font-size:12px;color:var(--ok);margin-top:4px;display:block}\n.bubble{position:relative;background:#f8f1e1;color:#1b1406;border-radius:18px;padding:18px 20px;font-size:21px;line-height:1.55;font-family:Fraunces,serif;margin-top:6px;animation:rise .3s}\n.bubble::before{content:\"\";position:absolute;top:-10px;left:var(--x,50%);border:10px solid transparent;border-top:0;border-bottom-color:#f8f1e1}\n.bubble .who{font-family:Inter,sans-serif;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8a6a2e;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}\n.bubble .who button{border:none;background:#1b1406;color:#f8f1e1;border-radius:999px;padding:6px 12px;font-size:13px}\n\n/* ---------- board ---------- */\n.board{position:relative;border-radius:18px;padding:22px;min-height:360px;background:\n radial-gradient(circle at 20% 30%,rgba(0,0,0,.18) 0 2px,transparent 3px) 0 0/22px 22px,\n linear-gradient(135deg,#8a5a34,#6e4526);box-shadow:inset 0 0 0 10px #4a2e19,inset 0 0 40px rgba(0,0,0,.45)}\n.board-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;position:relative;z-index:2}\n@media (max-width:640px){.board-grid{grid-template-columns:1fr 1fr}}\n.pin{position:relative;background:#fbf6ea;color:#2a1f10;border-radius:4px;padding:18px 14px 14px;box-shadow:0 10px 18px rgba(0,0,0,.35);transform:rotate(var(--rot,0deg));animation:drop .45s cubic-bezier(.2,1.6,.4,1)}\n.pin::before{content:\"\";position:absolute;top:-8px;left:50%;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ff8a8a,#c0262d);box-shadow:0 2px 3px rgba(0,0,0,.4)}\n.pin .ico{font-size:30px}\n.pin h5{margin:6px 0 4px;font-size:15px;font-family:Fraunces,serif}\n.pin p{margin:0;font-size:13px;line-height:1.45;color:#4a3a22}\n.pin.locked{background:rgba(255,255,255,.12);color:rgba(255,255,255,.65);box-shadow:none;border:2px dashed rgba(255,255,255,.35)}\n.pin.locked p{color:rgba(255,255,255,.6)}\n.pin.locked::before{background:#777}\n@keyframes drop{from{opacity:0;transform:translateY(-30px) rotate(-12deg) scale(1.1)}}\nsvg.strings{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none}\n\n.mini-ev{display:flex;flex-direction:column;gap:8px}\n.mini-ev .it{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.04);font-size:14px}\n.mini-ev .it.lock{opacity:.4}\n\n/* ---------- setup ---------- */\n.hero{text-align:center;padding:26px 10px 10px}\n.hero h1{font-size:clamp(42px,7vw,78px);margin:8px 0 0;line-height:.95;letter-spacing:.02em}\n.hero h1 em{font-style:normal;background:linear-gradient(180deg,#f3d9a2,#b8893f);-webkit-background-clip:text;background-clip:text;color:transparent}\n.hero p{color:var(--muted);letter-spacing:.2em;text-transform:uppercase;font-size:13px}\n.setup{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;margin-top:18px}\n@media (max-width:900px){.setup{grid-template-columns:1fr}}\n.field{margin-bottom:16px}\n.field label{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:8px;letter-spacing:.06em;text-transform:uppercase}\n.seg{display:flex;gap:8px;flex-wrap:wrap}\n.seg button{border-radius:12px;padding:10px 16px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);font-weight:600}\n.seg button.on{border-color:var(--gold);background:rgba(226,190,120,.14);color:var(--gold)}\n.team-inputs{display:grid;gap:8px}\n.team-inputs .ti{display:flex;align-items:center;gap:10px}\n.team-inputs .sw{width:16px;height:16px;border-radius:50%;flex:none}\n.team-inputs input{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:11px 14px;color:var(--text);font:inherit;font-size:16px}\n.how li{margin:8px 0;line-height:1.5;color:#cfd6e4}\n.how b{color:var(--gold)}\n\n/* ---------- accusation ---------- */\n.acc-team{display:flex;align-items:center;gap:10px;margin:16px 0 8px;font-weight:700}\n.motives{display:grid;grid-template-columns:1fr 1fr;gap:10px}\n@media (max-width:640px){.motives{grid-template-columns:1fr}}\n.mot{text-align:left;border-radius:14px;padding:14px;border:2px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);font-size:16px}\n.mot.sel{border-color:var(--gold);background:rgba(226,190,120,.1)}\n.votes{display:flex;gap:6px;justify-content:center;margin-top:6px;min-height:14px}\n.votes i{width:12px;height:12px;border-radius:50%;display:block}\n.reveal{text-align:center;padding:10px}\n.reveal .culprit{position:relative;display:inline-block}\n.reveal .culprit svg{width:180px;height:180px}\n.stamp{position:absolute;left:50%;top:80%;transform:translate(-50%,-50%) rotate(-14deg);border:5px solid var(--bad);color:var(--bad);font-family:Fraunces,serif;font-weight:800;font-size:40px;padding:2px 16px;border-radius:10px;letter-spacing:.1em;animation:stamp .5s cubic-bezier(.2,1.8,.4,1) both;animation-delay:.4s;background:rgba(7,11,22,.55)}\n@keyframes stamp{from{opacity:0;transform:translate(-50%,-50%) rotate(-14deg) scale(2.4)}}\n.confession{max-width:720px;margin:18px auto 0;font-family:Fraunces,serif;font-size:21px;line-height:1.6;font-style:italic;color:#f1e6cf}\n\n/* ---------- final ---------- */\n.podium{display:flex;justify-content:center;align-items:flex-end;gap:14px;margin:26px 0}\n.pod{width:170px;text-align:center}\n.pod .bar{border-radius:14px 14px 0 0;background:color-mix(in srgb,var(--c) 30%,#111a30);border:2px solid var(--c);display:grid;place-items:center;font-family:Fraunces,serif;font-size:34px;font-weight:800;animation:grow .7s ease-out both}\n@keyframes grow{from{transform:scaleY(0);transform-origin:bottom}}\n.pod .nm{font-weight:700;margin-bottom:8px}\n.pod .medal{font-size:34px}\n.words{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}\n.word{border-radius:12px;padding:12px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)}\n.word b{display:block;color:var(--gold);font-size:17px}\n.word span{font-size:14px;color:var(--muted)}\n\n.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}\n.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#fff7e6;color:#1b1406;padding:12px 18px;border-radius:999px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:70;animation:rise .25s}\nkbd{font-family:Inter,sans-serif;font-size:12px;border:1px solid rgba(255,255,255,.25);border-bottom-width:2px;border-radius:6px;padding:1px 6px;color:var(--text)}\n<\/style>\n<\/head>\n<body>\n<div class=\"wrap\" id=\"app\"><\/div>\n<div id=\"tip\" class=\"tip hidden\"><\/div>\n<canvas id=\"confetti\" class=\"confetti\"><\/canvas>\n\n<script>\n'use strict';\n/* =========================================================\n   DATA\n   ========================================================= */\nconst TEAM_COLORS = ['var(--t0)','var(--t1)','var(--t2)','var(--t3)'];\nconst TEAM_DEFAULTS = ['Red Foxes','Blue Owls','Green Wolves','Purple Cats'];\nconst STAGES = [\n  {id:'brief', ic:'\ud83d\udcc2', t:'Briefing', sub:'Read the case file. Tap gold words to see the translation.'},\n  {id:'talk',  ic:'\ud83d\udde3\ufe0f', t:'Interrogation', sub:'Listen to every suspect. Not every answer is true.'},\n  {id:'duel',  ic:'\u2694\ufe0f', t:'Grammar Duel', sub:'Every correct answer unlocks a piece of evidence.'},\n  {id:'board', ic:'\ud83d\udccc', t:'Evidence Board', sub:'Connect the clues. Which evidence really matters?'},\n  {id:'accuse',ic:'\u2696\ufe0f', t:'Accusation', sub:'Each team names the thief and the motive.'}\n];\n\n// Glossary: word -> [ru, kz]\nconst GLOSS = {\n  'diamond':['\u0431\u0440\u0438\u043b\u043b\u0438\u0430\u043d\u0442','\u0433\u0430\u0443\u04bb\u0430\u0440'], 'exhibition':['\u0432\u044b\u0441\u0442\u0430\u0432\u043a\u0430','\u043a\u04e9\u0440\u043c\u0435'], 'museum':['\u043c\u0443\u0437\u0435\u0439','\u043c\u04b1\u0440\u0430\u0436\u0430\u0439'],\n  'display case':['\u0432\u0438\u0442\u0440\u0438\u043d\u0430','\u0432\u0438\u0442\u0440\u0438\u043d\u0430'], 'empty':['\u043f\u0443\u0441\u0442\u043e\u0439','\u0431\u043e\u0441'], 'gone':['\u0438\u0441\u0447\u0435\u0437','\u0436\u043e\u049b \u0431\u043e\u043b\u044b\u043f \u043a\u0435\u0442\u0442\u0456'],\n  'thief':['\u0432\u043e\u0440','\u04b1\u0440\u044b'], 'keys':['\u043a\u043b\u044e\u0447\u0438','\u043a\u0456\u043b\u0442\u0442\u0435\u0440'], 'side door':['\u0431\u043e\u043a\u043e\u0432\u0430\u044f \u0434\u0432\u0435\u0440\u044c','\u0431\u04af\u0439\u0456\u0440 \u0435\u0441\u0456\u043a'],\n  'suspect':['\u043f\u043e\u0434\u043e\u0437\u0440\u0435\u0432\u0430\u0435\u043c\u044b\u0439','\u043a\u04af\u0434\u0456\u043a\u0442\u0456'], 'evidence':['\u0443\u043b\u0438\u043a\u0438, \u0434\u043e\u043a\u0430\u0437\u0430\u0442\u0435\u043b\u044c\u0441\u0442\u0432\u0430','\u0430\u0439\u0493\u0430\u049b, \u0434\u04d9\u043b\u0435\u043b'],\n  'guard':['\u043e\u0445\u0440\u0430\u043d\u043d\u0438\u043a','\u043a\u04af\u0437\u0435\u0442\u0448\u0456'], 'speech':['\u0440\u0435\u0447\u044c','\u0441\u04e9\u0437 \u0441\u04e9\u0439\u043b\u0435\u0443'], 'guests':['\u0433\u043e\u0441\u0442\u0438','\u049b\u043e\u043d\u0430\u049b\u0442\u0430\u0440'],\n  'office':['\u043e\u0444\u0438\u0441, \u043a\u0430\u0431\u0438\u043d\u0435\u0442','\u043a\u0435\u04a3\u0441\u0435'], 'label':['\u044d\u0442\u0438\u043a\u0435\u0442\u043a\u0430, \u0442\u0430\u0431\u043b\u0438\u0447\u043a\u0430','\u0436\u0430\u043f\u0441\u044b\u0440\u043c\u0430, \u0431\u0435\u043b\u0433\u0456'],\n  'navy':['\u0442\u0451\u043c\u043d\u043e-\u0441\u0438\u043d\u0438\u0439','\u049b\u043e\u044e \u043a\u04e9\u043a'], 'jacket':['\u043a\u0443\u0440\u0442\u043a\u0430','\u043a\u04af\u0440\u0442\u043a\u0435'], 'garden':['\u0441\u0430\u0434','\u0431\u0430\u049b'],\n  'main entrance':['\u0433\u043b\u0430\u0432\u043d\u044b\u0439 \u0432\u0445\u043e\u0434','\u0431\u0430\u0441\u0442\u044b \u043a\u0456\u0440\u0435\u0431\u0435\u0440\u0456\u0441'], 'keycard':['\u043a\u043b\u044e\u0447-\u043a\u0430\u0440\u0442\u0430','\u043a\u0456\u043b\u0442-\u043a\u0430\u0440\u0442\u0430'],\n  'locker':['\u0448\u043a\u0430\u0444\u0447\u0438\u043a','\u0436\u0435\u043a\u0435 \u0448\u043a\u0430\u0444'], 'collector':['\u043a\u043e\u043b\u043b\u0435\u043a\u0446\u0438\u043e\u043d\u0435\u0440','\u043a\u043e\u043b\u043b\u0435\u043a\u0446\u0438\u043e\u043d\u0435\u0440'],\n  'badge':['\u0431\u0435\u0439\u0434\u0436','\u0431\u0435\u0439\u0434\u0436'], 'glass dust':['\u0441\u0442\u0435\u043a\u043b\u044f\u043d\u043d\u0430\u044f \u043f\u044b\u043b\u044c','\u0448\u044b\u043d\u044b \u0448\u0430\u04a3\u044b'], 'motive':['\u043c\u043e\u0442\u0438\u0432','\u0441\u0435\u0431\u0435\u043f, \u043c\u043e\u0442\u0438\u0432'],\n  'alibi':['\u0430\u043b\u0438\u0431\u0438','\u0430\u043b\u0438\u0431\u0438'], 'witness':['\u0441\u0432\u0438\u0434\u0435\u0442\u0435\u043b\u044c','\u043a\u0443\u04d9\u0433\u0435\u0440'], 'claimed':['\u0443\u0442\u0432\u0435\u0440\u0436\u0434\u0430\u043b(\u0430)','\u043c\u04d9\u043b\u0456\u043c\u0434\u0435\u0434\u0456'],\n  'confirmed':['\u043f\u043e\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u043b\u0438','\u0440\u0430\u0441\u0442\u0430\u0434\u044b'], 'unveil':['\u043f\u0440\u0435\u0434\u0441\u0442\u0430\u0432\u0438\u0442\u044c, \u043e\u0442\u043a\u0440\u044b\u0442\u044c','\u0442\u0430\u043d\u044b\u0441\u0442\u044b\u0440\u0443, \u0430\u0448\u0443'],\n  'disappeared':['\u0438\u0441\u0447\u0435\u0437','\u0436\u043e\u0493\u0430\u043b\u044b\u043f \u043a\u0435\u0442\u0442\u0456'], 'access':['\u0434\u043e\u0441\u0442\u0443\u043f','\u043a\u0456\u0440\u0443 \u043c\u04af\u043c\u043a\u0456\u043d\u0434\u0456\u0433\u0456'],\n  'insisted':['\u043d\u0430\u0441\u0442\u0430\u0438\u0432\u0430\u043b(\u0430)','\u0442\u0430\u0431\u0430\u043d\u0434\u044b \u0442\u04af\u0440\u0434\u0435 \u0430\u0439\u0442\u0442\u044b'], 'rushing':['\u0441\u043f\u0435\u0448\u0430\u0449\u0438\u0439, \u0431\u0435\u0433\u0443\u0449\u0438\u0439','\u0430\u0441\u044b\u0493\u044b\u043f \u0436\u04af\u0433\u0456\u0440\u0433\u0435\u043d']\n};\n\nconst EVIDENCE = {\n  keycard:{ic:'\ud83d\udcb3', t:'Keycard Log', d:'Emily\u2019s staff keycard opened the side exit at 8:17.'},\n  badge:{ic:'\ud83e\udeaa', t:'Visitor Badge', d:'Emily\u2019s badge was found on the ground just outside the side exit.'},\n  jacket:{ic:'\ud83e\udde5', t:'Navy Jacket', d:'A navy jacket with glass dust in the pocket was in Emily\u2019s locker.'},\n  collector:{ic:'\u2709\ufe0f', t:'Collector Message', d:'Emily wrote to a private collector about \u201ca rare stone\u201d last week.'},\n  patrol:{ic:'\ud83d\udd26', t:'Patrol Log', d:'Daniel checked the main entrance first and reached the side door at 8:18.'},\n  camera:{ic:'\ud83d\udcf9', t:'Camera Record', d:'The hall camera was turned toward the entrance, not the display case.'}\n};\nconst EV_ORDER = ['keycard','badge','jacket','collector','patrol','camera'];\n\nconst SUSPECTS = [\n  {id:'alexander', name:'Alexander', role:'Museum Director', pitch:.85},\n  {id:'emily', name:'Emily', role:'Museum Assistant', pitch:1.25},\n  {id:'daniel', name:'Daniel', role:'Security Guard', pitch:.7}\n];\nconst MOTIVES = [\n  {id:'collector', t:'She planned to sell the diamond to a private collector.'},\n  {id:'insurance', t:'She wanted the museum to get the insurance money.'},\n  {id:'revenge', t:'She wanted revenge on Alexander.'},\n  {id:'mistake', t:'She took it by mistake.'}\n];\n\nconst LEVELS = {\n  beginner:{\n    label:'Beginner \u00b7 A1\u2013A2',\n    story:[\n      'Tonight is the opening night of the Aurora [diamond] [exhibition] at the City [museum]. The doors open at 8:00. At 8:20 the director, Alexander, looks at the [display case]. It is [empty]! The diamond is [gone].'\n    ],\n    mail:'Dear Detective, please help me. The diamond was in the case at 7:30. Only Alexander, Emily and Daniel have [keys] to the case. The [side door] was opened at 8:17. Please find the [thief]. \u2014 Alexander',\n    notes:['Diamond in the case at <b>7:30<\/b>','Doors open at <b>8:00<\/b>','Side door opened at <b>8:17<\/b>','Case empty at <b>8:20<\/b>','Keys: <b>Alexander, Emily, Daniel<\/b>'],\n    talk:{\n      alexander:'I was in the main hall from eight o\u2019clock. I gave a [speech] to the [guests]. At 8:20 I walked to the case, and it was empty.',\n      emily:'At 8:10 I went to the [office] to get a display [label]. I stayed in the office until 8:25. I never went near the side door.',\n      daniel:'First I checked the [main entrance]. I got to the side door at about 8:18. I saw a person in a [navy] [jacket] running into the [garden].'\n    },\n    q:{\n      brief:[\n        {type:'choice', p:'When was the diamond still in the case?', o:['At 7:30','At 8:17','At 8:20','At 9:00'], a:0, ex:'The email says: \u201cThe diamond was in the case at 7:30.\u201d'},\n        {type:'choice', p:'Who has keys to the case?', o:['All the guests','Only the director','Alexander, Emily and Daniel','Nobody'], a:2, ex:'\u201cOnly Alexander, Emily and Daniel have keys to the case.\u201d'},\n        {type:'tf', p:'The side door was opened at 8:17.', a:true, ex:'True \u2014 this is in Alexander\u2019s email.'}\n      ],\n      talk:[\n        {type:'choice', p:'Whose story can other people check?', o:['Alexander\u2019s \u2014 the guests saw his speech','Emily\u2019s \u2014 she was alone in the office','Daniel\u2019s \u2014 he was alone at the door','Nobody\u2019s'], a:0, ex:'Many guests saw Alexander in the main hall. That is an <b>alibi<\/b> \u2014 proof that you were somewhere else.'},\n        {type:'choice', p:'Daniel: \u201cI saw a person in a navy jacket ___ into the garden.\u201d', o:['running','run','runs','ran'], a:0, ex:'<b>see someone + -ing<\/b> describes an action in progress: \u201cI saw a person <b>running<\/b>.\u201d'},\n        {type:'order', p:'Build Emily\u2019s sentence.', w:['Emily','went','to','the','office','at','8:10'], ex:'Subject + past verb + place + time: \u201cEmily went to the office at 8:10.\u201d'}\n      ],\n      duel:[\n        {type:'choice', p:'Emily\u2019s keycard ___ the side exit at 8:17.', o:['opened','opens','open','opening'], a:0, ev:'keycard', ex:'It happened in the past (at 8:17), so we use the past simple: <b>opened<\/b>.'},\n        {type:'choice', p:'The police found ___ visitor badge outside the door.', o:['a','an','\u2014','some'], a:0, ev:'badge', ex:'\u201cVisitor\u201d starts with a consonant sound /v/, so we use <b>a<\/b>.'},\n        {type:'choice', p:'The navy jacket was ___ Emily\u2019s locker.', o:['in','at','to','of'], a:0, ev:'jacket', ex:'Things inside a box, bag or locker are <b>in<\/b> it.'},\n        {type:'choice', p:'Emily ___ a message to a private collector last week.', o:['sent','send','sends','sending'], a:0, ev:'collector', ex:'\u201cLast week\u201d = finished past time \u2192 past simple: <b>sent<\/b> (irregular: send \u2013 sent \u2013 sent).'},\n        {type:'tf', p:'Is this sentence correct? \u201cDaniel don\u2019t work at night.\u201d', a:false, ev:'patrol', ex:'With he / she / a name we use <b>doesn\u2019t<\/b>: \u201cDaniel doesn\u2019t work at night.\u201d'},\n        {type:'choice', p:'There ___ two cameras in the hall.', o:['were','was','is','be'], a:0, ev:'camera', ex:'\u201cTwo cameras\u201d is plural and it is past \u2192 <b>were<\/b>.'}\n      ],\n      board:[\n        {type:'choice', p:'Which evidence shows that Emily was NOT in the office at 8:17?', o:['Keycard Log','Camera Record','Patrol Log','Collector Message'], a:0, ex:'Her keycard opened the side exit at 8:17 \u2014 so she was not in the office.'},\n        {type:'choice', p:'Why is the glass dust in the jacket pocket important?', o:['The person in this jacket was near the display case','Emily cleaned the windows','Daniel dropped it','It came from the street'], a:0, ex:'Glass dust connects the jacket with the display case.'}\n      ]\n    },\n    confession:'\u201cYes\u2026 it was me. A collector offered me a lot of money for the Aurora Diamond. I used my keycard, I took the diamond, and I ran out through the side door. I thought no one saw me.\u201d \u2014 Emily'\n  },\n\n  detective:{\n    label:'Detective \u00b7 B1\u2013B2',\n    story:[\n      'Tonight the City [museum] was supposed to [unveil] the Aurora [diamond]. The doors had opened at 8:00, and the guests were already in the main hall when Alexander, the director, walked over to the [display case] at 8:20. It was [empty] \u2014 the diamond had [disappeared] without a sound.'\n    ],\n    mail:'Detective, the diamond was last seen in the case at 7:30. Only three people have [access] to it: myself, my assistant Emily and our [guard], Daniel. According to the security system, the [side door] was opened at 8:17. I need you to find the [thief] before the press finds out. \u2014 Alexander',\n    notes:['Last seen at <b>7:30<\/b>','Doors opened at <b>8:00<\/b>','Side door opened at <b>8:17<\/b>','Theft discovered at <b>8:20<\/b>','Access: <b>Alexander, Emily, Daniel<\/b>'],\n    talk:{\n      alexander:'I had been in the main hall since eight. I was giving a [speech], so dozens of [guests] can confirm where I was. I only went to the case at 8:20.',\n      emily:'Around 8:10 I went to the [office] to fetch a display [label]. I was there until 8:25, I promise. I hadn\u2019t been near the side door all evening.',\n      daniel:'I\u2019d checked the [main entrance] first, so I didn\u2019t reach the side door until about 8:18. By then someone in a [navy] [jacket] was [rushing] into the [garden].'\n    },\n    q:{\n      brief:[\n        {type:'choice', p:'When was the diamond last seen?', o:['At 7:30','At 8:00','At 8:17','At 8:20'], a:0, ex:'\u201cThe diamond was last seen in the case at 7:30.\u201d'},\n        {type:'choice', p:'Which detail suggests the thief knew the building well?', o:['The thief left through the side door, not the main entrance','The guests were in the main hall','The press may find out','The doors opened at 8:00'], a:0, ex:'Using a side door that guests don\u2019t know about suggests someone from inside the museum.'},\n        {type:'tf', p:'Alexander discovered the theft before the guests arrived.', a:false, ex:'False. The doors had opened at 8:00 and he found the empty case at 8:20 \u2014 the guests were already inside.'}\n      ],\n      talk:[\n        {type:'choice', p:'Emily said, \u201cI am in the office.\u201d \u2192 Emily said that she ___ in the office.', o:['was','is','has been','will be'], a:0, ex:'Reported speech: present simple moves one step back \u2192 <b>was<\/b>.'},\n        {type:'choice', p:'Whose alibi can be confirmed by independent witnesses?', o:['Alexander\u2019s','Emily\u2019s','Daniel\u2019s','Nobody\u2019s'], a:0, ex:'Dozens of guests saw Alexander giving a speech \u2014 an <b>alibi<\/b> confirmed by <b>witnesses<\/b>.'},\n        {type:'order', p:'Report Daniel\u2019s words.', w:['Daniel','claimed','that','he','had','seen','someone','in','a','navy','jacket'], ex:'Reported speech with past perfect: \u201cDaniel claimed that he had seen someone in a navy jacket.\u201d'}\n      ],\n      duel:[\n        {type:'choice', p:'The side exit ___ with Emily\u2019s keycard at 8:17.', o:['was opened','opened','has opened','was opening'], a:0, ev:'keycard', ex:'The door didn\u2019t open itself \u2014 someone opened it \u2192 passive: <b>was opened<\/b>.'},\n        {type:'choice', p:'If Emily ___ in the office, her badge wouldn\u2019t have been found outside.', o:['had stayed','stayed','has stayed','would stay'], a:0, ev:'badge', ex:'Third conditional (an unreal past): <b>If + past perfect, would have + V3<\/b>.'},\n        {type:'choice', p:'The jacket, ___ was found in Emily\u2019s locker, had glass dust in its pocket.', o:['which','who','what','where'], a:0, ev:'jacket', ex:'Non-defining relative clause about a thing \u2192 <b>which<\/b> (never \u201cwhat\u201d).'},\n        {type:'choice', p:'Emily had been in contact with a collector ___ the exhibition opened.', o:['before','since','during','while'], a:0, ev:'collector', ex:'Past perfect + <b>before<\/b> shows which action came first.'},\n        {type:'choice', p:'By the time Daniel reached the side door, the thief ___.', o:['had already left','already left','has already left','was already leave'], a:0, ev:'patrol', ex:'\u201cBy the time\u2026\u201d + an earlier past action \u2192 past perfect: <b>had already left<\/b>.'},\n        {type:'choice', p:'The camera must ___ toward the entrance on purpose.', o:['have been turned','had been turned','be turn','turned'], a:0, ev:'camera', ex:'Deduction about the past, passive: <b>must have been + V3<\/b>.'}\n      ],\n      board:[\n        {type:'choice', p:'Which piece of evidence directly contradicts Emily\u2019s statement?', o:['Keycard Log','Collector Message','Camera Record','Patrol Log'], a:0, ex:'She claimed she was in the office until 8:25, but her keycard was used at the side exit at 8:17.'},\n        {type:'choice', p:'Which piece of evidence is NOT enough to prove guilt on its own?', o:['Collector Message','Keycard Log','Navy Jacket','Visitor Badge'], a:0, ex:'Writing to a collector shows a possible <b>motive<\/b>, but not that she actually stole anything.'}\n      ]\n    },\n    confession:'\u201cFine \u2014 I did it. A collector had offered me more money than I could earn in ten years. I turned the camera, used my keycard and slipped out through the side door. If Daniel hadn\u2019t checked the main entrance first, he would have caught me.\u201d \u2014 Emily'\n  }\n};\n\n/* =========================================================\n   STATE\n   ========================================================= */\nlet S = {\n  screen:'setup', level:'beginner', teamCount:2, teams:TEAM_DEFAULTS.slice(0,4).map(n=>({name:n,score:0,right:0})),\n  timerSec:30, lang:0, sound:true,\n  stage:0, qi:0, turn:0, evidence:[], suspectOpen:null, heard:{},\n  answered:false, attempt:null, stealing:false, tried:[], order:[],\n  accuse:{}, accuseTeam:0, revealed:false\n};\nconst $ = id => document.getElementById(id);\nconst esc = s => String(s).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]));\nconst L = () => LEVELS[S.level];\nconst teams = () => S.teams.slice(0,S.teamCount);\nconst tc = i => TEAM_COLORS[i];\n\n/* =========================================================\n   SOUND + SPEECH\n   ========================================================= */\nlet AC=null;\nfunction beep(type){\n  if(!S.sound) return;\n  try{\n    AC = AC || new (window.AudioContext||window.webkitAudioContext)();\n    const seq = {ok:[[523,.09],[659,.09],[784,.18]], bad:[[220,.18],[175,.25]], tick:[[880,.04]], ev:[[392,.08],[523,.08],[659,.08],[1046,.22]], drum:[[110,.12],[110,.12],[110,.12],[82,.4]]}[type]||[];\n    let t = AC.currentTime;\n    seq.forEach(([f,d])=>{const o=AC.createOscillator(),g=AC.createGain();o.type=type==='drum'?'triangle':'sine';o.frequency.value=f;g.gain.setValueAtTime(.18,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+d+.02);t+=d*.9;});\n  }catch(e){}\n}\nfunction speak(text,pitch=1){\n  try{\n    speechSynthesis.cancel();\n    const u = new SpeechSynthesisUtterance(text.replace(/\\[|\\]/g,''));\n    const v = speechSynthesis.getVoices().find(v=>/en-GB/i.test(v.lang)) || speechSynthesis.getVoices().find(v=>/^en/i.test(v.lang));\n    if(v) u.voice=v; u.lang='en-GB'; u.rate=S.level==='beginner'?.82:.95; u.pitch=pitch;\n    speechSynthesis.speak(u);\n  }catch(e){ toast('Speech is not available in this browser'); }\n}\ntry{ speechSynthesis.getVoices(); }catch(e){}\n\n/* =========================================================\n   PORTRAITS (inline SVG)\n   ========================================================= */\nfunction portrait(id){\n  const P = {\n    alexander:{bg:'#2a3350',skin:'#e7b78e',hair:'#c9cbd3',body:'#262b38',acc:'<rect x=\"56\" y=\"88\" width=\"8\" height=\"22\" fill=\"#e2be78\"/><circle cx=\"50\" cy=\"55\" r=\"7\" fill=\"none\" stroke=\"#111\" stroke-width=\"2\"/><circle cx=\"70\" cy=\"55\" r=\"7\" fill=\"none\" stroke=\"#111\" stroke-width=\"2\"/><line x1=\"57\" y1=\"55\" x2=\"63\" y2=\"55\" stroke=\"#111\" stroke-width=\"2\"/>',hairShape:'<path d=\"M38 50 Q38 28 60 27 Q82 28 82 50 Q78 38 66 37 Q52 36 42 44 Z\" fill=\"#c9cbd3\"/>'},\n    emily:{bg:'#3a2a4d',skin:'#f1c7a2',hair:'#3b2417',body:'#1f3d70',acc:'<path d=\"M48 88 L60 104 L72 88\" fill=\"none\" stroke=\"#e8eefc\" stroke-width=\"3\"/>',hairBack:'<path d=\"M34 54 Q32 24 60 23 Q88 24 86 54 L90 96 Q74 90 60 90 Q46 90 30 96 Z\" fill=\"#3b2417\"/>',hairShape:'<path d=\"M38 52 Q40 27 60 27 Q80 27 82 52 Q74 36 56 38 Q46 40 38 52 Z\" fill=\"#3b2417\"/>'},\n    daniel:{bg:'#203646',skin:'#c48a5c',hair:'#1c1c1c',body:'#34465f',acc:'<circle cx=\"74\" cy=\"98\" r=\"4\" fill=\"#e2be78\"/>',hairShape:'<path d=\"M36 42 Q36 24 60 22 Q84 24 84 42 Z\" fill=\"#1d2738\"/><rect x=\"32\" y=\"40\" width=\"56\" height=\"6\" rx=\"3\" fill=\"#141b29\"/><circle cx=\"60\" cy=\"32\" r=\"4\" fill=\"#e2be78\"/>'}\n  }[id];\n  return `<svg viewBox=\"0 0 120 120\" aria-hidden=\"true\"><circle cx=\"60\" cy=\"60\" r=\"58\" fill=\"${P.bg}\"/>${P.hairBack||''}\n  <path d=\"M22 120 Q24 86 60 84 Q96 86 98 120 Z\" fill=\"${P.body}\"/>${P.acc.includes('rect x=\"56\"')?P.acc.split('<circle')[0]:''}\n  <rect x=\"53\" y=\"70\" width=\"14\" height=\"16\" rx=\"6\" fill=\"${P.skin}\"/>\n  <ellipse cx=\"60\" cy=\"54\" rx=\"21\" ry=\"24\" fill=\"${P.skin}\"/>\n  ${P.hairShape}\n  <circle cx=\"51\" cy=\"56\" r=\"2.6\" fill=\"#1b1406\"/><circle cx=\"69\" cy=\"56\" r=\"2.6\" fill=\"#1b1406\"/>\n  <path d=\"M53 67 Q60 71 67 67\" fill=\"none\" stroke=\"#7a3d2a\" stroke-width=\"2.2\" stroke-linecap=\"round\"/>\n  ${P.acc.includes('rect x=\"56\"')?'<circle'+P.acc.split('<circle').slice(1).join('<circle'):P.acc}\n  <\/svg>`;\n}\n\n/* =========================================================\n   TEXT HELPERS\n   ========================================================= */\nfunction glossify(text){\n  return esc(text).replace(/\\[(.+?)\\]/g,(m,w)=>{\n    const g = GLOSS[w.toLowerCase()];\n    return g ? `<span class=\"gw\" data-w=\"${esc(w)}\">${w}<\/span>` : w;\n  });\n}\nconst plain = t => t.replace(/\\[|\\]/g,'');\nfunction usedWords(){\n  const all = [ ...L().story, L().mail, ...Object.values(L().talk) ].join(' ');\n  const seen=[]; all.replace(/\\[(.+?)\\]/g,(m,w)=>{w=w.toLowerCase(); if(GLOSS[w]&&!seen.includes(w)) seen.push(w);});\n  return seen;\n}\n\n/* =========================================================\n   TIMER\n   ========================================================= */\nlet timerId=null, timeLeft=0;\nfunction startTimer(){\n  stopTimer();\n  if(!S.timerSec) return;\n  timeLeft=S.timerSec; drawTimer();\n  timerId=setInterval(()=>{\n    timeLeft--; if(timeLeft<=5 && timeLeft>0) beep('tick');\n    drawTimer();\n    if(timeLeft<=0){ stopTimer(); answer(null); }\n  },1000);\n}\nfunction stopTimer(){ clearInterval(timerId); timerId=null; }\nfunction drawTimer(){\n  const el=$('timer'); if(!el) return;\n  const p = Math.max(0,timeLeft/S.timerSec), C=2*Math.PI*31;\n  el.querySelector('.arc').setAttribute('stroke-dasharray',`${C*p} ${C}`);\n  el.querySelector('.num').textContent=timeLeft;\n  el.classList.toggle('low',timeLeft<=5);\n}\nfunction timerHtml(){\n  if(!S.timerSec) return '';\n  return `<div class=\"timer\" id=\"timer\"><svg width=\"74\" height=\"74\"><circle cx=\"37\" cy=\"37\" r=\"31\" stroke=\"rgba(255,255,255,.08)\" stroke-width=\"6\" fill=\"none\"/><circle class=\"arc\" cx=\"37\" cy=\"37\" r=\"31\" stroke=\"var(--gold)\" stroke-width=\"6\" fill=\"none\" stroke-linecap=\"round\"/><\/svg><div class=\"num\">${S.timerSec}<\/div><\/div>`;\n}\n\n/* =========================================================\n   RENDER: frame\n   ========================================================= */\nfunction topbar(){\n  return `<div class=\"topbar\">\n    <div class=\"brand\"><div class=\"logo\">\u25c6<\/div><div><h1 class=\"serif\">English Mystery<\/h1><small>Case #001 \u00b7 The Missing Diamond \u00b7 Class Mode \u00b7 ${L().label}<\/small><\/div><\/div>\n    <div class=\"tools\">\n      <button class=\"icon-btn ${S.lang===0?'on':''}\" data-a=\"lang\" title=\"Translation language\">${S.lang===0?'RU':'KZ'}<\/button>\n      <button class=\"icon-btn ${S.sound?'on':''}\" data-a=\"sound\" title=\"Sound\">${S.sound?'\ud83d\udd0a':'\ud83d\udd08'}<\/button>\n      <button class=\"icon-btn\" data-a=\"full\" title=\"Full screen\">\u26f6<\/button>\n      <button class=\"icon-btn\" data-a=\"home\" title=\"New game\">\u2302<\/button>\n    <\/div><\/div>`;\n}\nfunction scoreboard(){\n  return `<div class=\"scoreboard\" style=\"--n:${S.teamCount}\">${teams().map((t,i)=>`\n    <div class=\"team ${i===S.turn && S.screen==='game' && STAGES[S.stage].id!=='accuse'?'active':''}\" style=\"--c:${tc(i)}\" id=\"team${i}\">\n      <span class=\"name\">${esc(t.name)}<\/span><span class=\"plus\" id=\"plus${i}\"><\/span><span class=\"pts\">${t.score}<\/span>\n    <\/div>`).join('')}<\/div>`;\n}\nfunction track(){\n  return `<div class=\"track\">${STAGES.map((s,i)=>`<div class=\"step ${i<S.stage?'done':''} ${i===S.stage?'now':''}\"><span class=\"ic\">${i<S.stage?'\u2713':s.ic}<\/span><span class=\"lbl\">${s.t}<\/span><\/div>`).join('')}<\/div>`;\n}\nfunction sidePanel(){\n  const ev = EV_ORDER.map(id=>{const on=S.evidence.includes(id);return `<div class=\"it ${on?'':'lock'}\"><span>${on?EVIDENCE[id].ic:'\ud83d\udd12'}<\/span><span>${on?EVIDENCE[id].t:'Locked'}<\/span><\/div>`;}).join('');\n  return `<aside class=\"side\">\n    <div class=\"card\" style=\"margin-bottom:14px\"><h3 class=\"serif\">\ud83d\uddd2\ufe0f Case notes<\/h3><ul class=\"notes\" style=\"padding-left:18px;margin:0\">${L().notes.map(n=>`<li>${n}<\/li>`).join('')}<\/ul><\/div>\n    <div class=\"card\"><h3 class=\"serif\">\ud83e\uddfe Evidence ${S.evidence.length} / 6<\/h3><div class=\"mini-ev\">${ev}<\/div><\/div>\n    <p class=\"muted\" style=\"font-size:12px;margin-top:12px;line-height:1.6\">Keys: <kbd>1<\/kbd>\u2013<kbd>4<\/kbd> answer \u00b7 <kbd>Space<\/kbd> next \u00b7 <kbd>L<\/kbd> listen<\/p>\n  <\/aside>`;\n}\n\nfunction render(){\n  hideTip();\n  const app=$('app');\n  if(S.screen==='setup'){ app.innerHTML=setupHtml(); return; }\n  if(S.screen==='final'){ app.innerHTML=topbar()+finalHtml(); confetti(); return; }\n  const st=STAGES[S.stage];\n  let main='';\n  if(st.id==='accuse') main=accuseHtml();\n  else if(S.qi<0) main=introHtml(st);\n  else main=questionHtml(st);\n  app.innerHTML = topbar()+scoreboard()+track()+`<div class=\"stage\"><main class=\"card\">${main}<\/main>${sidePanel()}<\/div>`;\n  if(st.id!=='accuse' && S.qi>=0 && !S.answered) startTimer(); else stopTimer();\n}\n\n/* =========================================================\n   SETUP\n   ========================================================= */\nfunction setupHtml(){\n  return (window.top!==window?`<button class=\"btn btn-sm\" data-a=\"home\" style=\"margin-top:6px\">← Menu</button>`:'')+`<div class=\"hero\"><div class=\"kicker\">Case #001 \u00b7 The Missing Diamond<\/div>\n    <h1 class=\"serif\">ENGLISH<br><em>MYSTERY<\/em><\/h1><p>Class Mode \u00b7 Teams \u00b7 Think. Investigate. Solve.<\/p><\/div>\n  <div class=\"setup\">\n    <div class=\"card\">\n      <div class=\"field\"><label>Level<\/label><div class=\"seg\">\n        <button class=\"${S.level==='beginner'?'on':''}\" data-a=\"lvl\" data-v=\"beginner\">Beginner \u00b7 A1\u2013A2<\/button>\n        <button class=\"${S.level==='detective'?'on':''}\" data-a=\"lvl\" data-v=\"detective\">Detective \u00b7 B1\u2013B2<\/button><\/div><\/div>\n      <div class=\"field\"><label>Number of teams<\/label><div class=\"seg\">\n        ${[2,3,4].map(n=>`<button class=\"${S.teamCount===n?'on':''}\" data-a=\"tn\" data-v=\"${n}\">${n} teams<\/button>`).join('')}<\/div><\/div>\n      <div class=\"field\"><label>Team names<\/label><div class=\"team-inputs\">\n        ${teams().map((t,i)=>`<div class=\"ti\"><span class=\"sw\" style=\"background:${tc(i)}\"><\/span><input data-team=\"${i}\" value=\"${esc(t.name)}\" maxlength=\"22\"><\/div>`).join('')}<\/div><\/div>\n      <div class=\"field\"><label>Time per question<\/label><div class=\"seg\">\n        ${[[0,'No timer'],[20,'20 s'],[30,'30 s'],[45,'45 s']].map(([v,t])=>`<button class=\"${S.timerSec===v?'on':''}\" data-a=\"tm\" data-v=\"${v}\">${t}<\/button>`).join('')}<\/div><\/div>\n      <div class=\"field\"><label>Word translations<\/label><div class=\"seg\">\n        <button class=\"${S.lang===0?'on':''}\" data-a=\"lg\" data-v=\"0\">\u0420\u0443\u0441\u0441\u043a\u0438\u0439<\/button><button class=\"${S.lang===1?'on':''}\" data-a=\"lg\" data-v=\"1\">\u049a\u0430\u0437\u0430\u049b\u0448\u0430<\/button><\/div><\/div>\n      <button class=\"btn btn-gold\" style=\"width:100%;font-size:18px;padding:16px\" data-a=\"start\">Open the case \u2192<\/button>\n    <\/div>\n    <div class=\"card\">\n      <div class=\"kicker\" style=\"margin-bottom:8px\">How to play<\/div>\n      <ol class=\"how\" style=\"padding-left:20px;margin:0\">\n        <li>Teams answer <b>in turns<\/b>. The active team glows on the scoreboard.<\/li>\n        <li>Correct answer = <b>+10<\/b>. Wrong or out of time \u2192 the next team can <b>steal<\/b> for <b>+5<\/b>.<\/li>\n        <li>In the <b>Grammar Duel<\/b> every correct answer pins a new piece of <b>evidence<\/b> on the board.<\/li>\n        <li>Tap <b>gold words<\/b> to see the translation. Press <b>\ud83d\udd0a Listen<\/b> to hear the text.<\/li>\n        <li>At the end, every team names the <b>thief<\/b> (+30) and the <b>motive<\/b> (+10).<\/li>\n      <\/ol>\n      <div class=\"row\" style=\"margin-top:18px;justify-content:center\">${SUSPECTS.map(s=>`<div style=\"text-align:center;width:96px\"><div style=\"width:76px;margin:0 auto\">${portrait(s.id)}<\/div><div style=\"font-size:13px;font-weight:700;margin-top:4px\">${s.name}<\/div><div class=\"muted\" style=\"font-size:11px\">${s.role}<\/div><\/div>`).join('')}<\/div>\n      <p class=\"muted\" style=\"font-size:13px;text-align:center;margin-top:14px\">Best on a projector or interactive board \u00b7 25\u201335 minutes<\/p>\n    <\/div>\n  <\/div>`;\n}\n\n/* =========================================================\n   STAGE INTRO screens\n   ========================================================= */\nfunction introHtml(st){\n  let body='';\n  if(st.id==='brief'){\n    body = `<div class=\"story\">${L().story.map(p=>`<p>${glossify(p)}<\/p>`).join('')}<\/div>\n      <div class=\"email\"><div class=\"hd\"><b>From:<\/b> Alexander Hart \u00b7 <b>Subject:<\/b> Please help me<\/div>${glossify(L().mail)}<\/div>`;\n  } else if(st.id==='talk'){\n    const open=S.suspectOpen, idx=SUSPECTS.findIndex(s=>s.id===open);\n    body = `<div class=\"suspects\">${SUSPECTS.map(s=>`<button class=\"sus ${open===s.id?'sel':''}\" data-a=\"sus\" data-v=\"${s.id}\">${portrait(s.id)}<strong>${s.name}<\/strong><span>${s.role}<\/span>${S.heard[s.id]?'<span class=\"seen\">\u2713 interviewed<\/span>':''}<\/button>`).join('')}<\/div>\n      ${open?`<div class=\"bubble\" style=\"--x:${16.6+idx*33.3}%\"><div class=\"who\"><span>${SUSPECTS[idx].name} says\u2026<\/span><button data-a=\"say\" data-v=\"${open}\">\ud83d\udd0a Listen<\/button><\/div>${glossify(L().talk[open])}<\/div>`\n      :`<p class=\"muted\" style=\"font-size:18px\">\ud83d\udc46 Tap a suspect to hear their statement. Interview all three.<\/p>`}`;\n  } else if(st.id==='duel'){\n    body = `<p style=\"font-size:20px;line-height:1.6\">Six questions. Six pieces of evidence are locked in the police lab.<br>Each correct answer <b style=\"color:var(--gold)\">unlocks one<\/b> and pins it on the board.<\/p>${boardHtml()}`;\n  } else if(st.id==='board'){\n    body = `<p style=\"font-size:20px;line-height:1.6\">You unlocked <b style=\"color:var(--gold)\">${S.evidence.length} of 6<\/b> pieces of evidence. Look at the board together and talk: <i>who had the chance, the reason and the keys?<\/i><\/p>${boardHtml(true)}`;\n  }\n  const canGo = st.id!=='talk' || SUSPECTS.every(s=>S.heard[s.id]);\n  const listenBtn = st.id==='brief' ? `<button class=\"btn listen\" data-a=\"readall\">\ud83d\udd0a Listen<\/button>` : '';\n  return `<div class=\"q-head\"><div><div class=\"kicker\">Stage ${S.stage+1} \u00b7 ${st.t}<\/div><h2 class=\"serif\">${st.ic} ${st.t}<\/h2><p class=\"muted\" style=\"margin:6px 0 0\">${st.sub}<\/p><\/div><\/div>\n    ${body}\n    <div class=\"actions\">${listenBtn}<button class=\"btn btn-gold\" data-a=\"begin\" ${canGo?'':'disabled style=\"opacity:.45;cursor:not-allowed\"'}>${canGo?'Start the questions \u2192':'Interview everyone first'}<\/button><\/div>`;\n}\n\nfunction boardHtml(withStrings){\n  const rots=[-3,2,-1.5,3,-2.5,1.5];\n  const pins = EV_ORDER.map((id,i)=>{\n    const on=S.evidence.includes(id), e=EVIDENCE[id];\n    return `<div class=\"pin ${on?'':'locked'}\" style=\"--rot:${rots[i]}deg\" data-pin=\"${id}\"><div class=\"ico\">${on?e.ic:'\ud83d\udd12'}<\/div><h5>${on?e.t:'Locked'}<\/h5><p>${on?esc(e.d):'Win a duel question to unlock.'}<\/p><\/div>`;\n  }).join('');\n  return `<div class=\"board\" id=\"board\"><svg class=\"strings\" id=\"strings\"><\/svg><div class=\"board-grid\">${pins}<\/div><\/div>`;\n}\nfunction drawStrings(){\n  const svg=$('strings'), b=$('board'); if(!svg||!b) return;\n  const on=[...b.querySelectorAll('.pin:not(.locked)')]; const br=b.getBoundingClientRect();\n  const pts=on.map(p=>{const r=p.getBoundingClientRect();return [r.left-br.left+r.width/2, r.top-br.top+4];});\n  let d=''; for(let i=1;i<pts.length;i++) d+=`<line x1=\"${pts[i-1][0]}\" y1=\"${pts[i-1][1]}\" x2=\"${pts[i][0]}\" y2=\"${pts[i][1]}\" stroke=\"#d6333b\" stroke-width=\"2.5\" opacity=\".85\"/>`;\n  svg.innerHTML=d;\n}\n\n/* =========================================================\n   QUESTIONS\n   ========================================================= */\nfunction curQ(){ return L().q[STAGES[S.stage].id][S.qi]; }\nfunction qCount(){ return L().q[STAGES[S.stage].id].length; }\nfunction teamNow(){ return S.stealing ? (S.turn+1)%S.teamCount : S.turn; }\n\nfunction questionHtml(st){\n  const q=curQ(), t=teamNow();\n  const tag={choice:'Choose the answer',tf:'True or false?',order:'Put the words in order'}[q.type];\n  let body='';\n  if(q.type==='choice'||q.type==='tf'){\n    const opts = q.type==='tf'?['True','False']:q.o;\n    const right = q.type==='tf' ? (q.a?0:1) : q.a;\n    body = `<div class=\"options\">${opts.map((o,i)=>{\n      let cls=''; if(S.tried.includes(i)) cls='wrong'; if(S.answered && i===right) cls='right';\n      const dis = S.answered || S.tried.includes(i);\n      return `<button class=\"opt ${cls}\" data-a=\"opt\" data-v=\"${i}\" ${dis?'disabled':''}><span class=\"k\">${cls==='right'?'\u2713':cls==='wrong'?'\u2717':i+1}<\/span>${esc(o)}<\/button>`;}).join('')}<\/div>`;\n  } else {\n    const placed=S.order;\n    body = `<div class=\"answer-line\" id=\"aline\">${placed.map((wi,k)=>`<button class=\"tile\" data-a=\"unplace\" data-v=\"${k}\">${esc(S.shuffled[wi])}<\/button>`).join('')}<\/div>\n      <div class=\"tiles\">${S.shuffled.map((w,i)=>`<button class=\"tile ${placed.includes(i)?'used':''}\" data-a=\"place\" data-v=\"${i}\" ${S.answered?'disabled':''}>${esc(w)}<\/button>`).join('')}<\/div>\n      ${S.answered?'':`<div class=\"actions\" style=\"justify-content:flex-start\"><button class=\"btn btn-sm\" data-a=\"clear\">\u21ba Clear<\/button><button class=\"btn btn-gold btn-sm\" data-a=\"check\" ${placed.length===q.w.length?'':'disabled style=\"opacity:.45\"'}>Check<\/button><\/div>`}`;\n  }\n  const evLine = q.ev && !S.answered ? `<p class=\"muted\" style=\"margin:-6px 0 14px\">\ud83d\udd12 Prize: <b style=\"color:var(--gold)\">${EVIDENCE[q.ev].t}<\/b><\/p>`:'';\n  const prompt = esc(q.p).replace(/___/g,'<span class=\"blank\">?<\/span>');\n  return `<div class=\"q-head\"><div>\n      <div class=\"kicker\">Stage ${S.stage+1} \u00b7 ${st.t} \u00b7 Question ${S.qi+1} / ${qCount()}<\/div>\n      <div style=\"margin-top:10px\"><span class=\"turn-pill\" style=\"--c:${tc(t)}\"><span class=\"dot\"><\/span>${S.stealing?'STEAL! ':''}${esc(teams()[t].name)}<\/span><\/div>\n    <\/div>${S.answered?'':timerHtml()}<\/div>\n    <div class=\"type-tag\">${tag}<\/div>\n    <div class=\"prompt\">${prompt}<\/div>${evLine}\n    ${body}\n    ${feedbackHtml()}`;\n}\n\nfunction feedbackHtml(){\n  if(S.attempt==='steal-offer'){\n    const n=(S.turn+1)%S.teamCount;\n    return `<div class=\"banner steal\"><div class=\"big\">\u26a1<\/div><div><h4>Not quite! Steal chance for ${esc(teams()[n].name)}<\/h4><p>Try one of the remaining answers for <b>+5<\/b>.<\/p><\/div><\/div>`;\n  }\n  if(!S.answered) return '';\n  const q=curQ(), ok=S.attempt==='ok';\n  const ev = ok && q.ev ? `<p style=\"margin-top:8px\">\ud83d\udd13 New evidence unlocked: <b>${EVIDENCE[q.ev].ic} ${EVIDENCE[q.ev].t}<\/b><\/p>`:'';\n  const head = ok ? (S.lastWinner!=null?`Correct! +${S.lastPts} for ${esc(teams()[S.lastWinner].name)}`:'Correct!') : (S.attempt==='timeout'?'Time is up!':'No points this time');\n  const model = q.type==='order' ? `<p><b>Answer:<\/b> ${esc(q.w.join(' '))}<\/p>`:'';\n  const last = S.qi===qCount()-1;\n  return `<div class=\"banner ${ok?'ok':'bad'}\"><div class=\"big\">${ok?'\u2705':'\ud83d\udcd8'}<\/div><div><h4>${head}<\/h4>${model}<p>${q.ex}<\/p>${ev}<\/div><\/div>\n   <div class=\"actions\"><button class=\"btn btn-gold\" data-a=\"next\">${last?'Next stage \u2192':'Next question \u2192'}<\/button><\/div>`;\n}\n\nfunction prepQ(){\n  S.answered=false; S.attempt=null; S.stealing=false; S.tried=[]; S.order=[]; S.lastWinner=null;\n  const q=curQ(); if(q && q.type==='order'){ S.shuffled=shuffle(q.w.slice()); if(S.shuffled.join(' ')===q.w.join(' ')) S.shuffled.reverse(); }\n}\nfunction shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}\n\nfunction answer(choice){\n  if(S.answered) return;\n  stopTimer();\n  const q=curQ();\n  let ok=false;\n  if(choice!==null){\n    if(q.type==='order') ok = S.order.map(i=>S.shuffled[i]).join(' ')===q.w.join(' ');\n    else if(q.type==='tf') ok = (choice===0)===q.a;\n    else ok = choice===q.a;\n  }\n  if(ok){\n    const t=teamNow(), pts=S.stealing?5:10;\n    award(t,pts); S.lastWinner=t; S.lastPts=pts;\n    S.answered=true; S.attempt='ok';\n    if(q.ev && !S.evidence.includes(q.ev)){ S.evidence.push(q.ev); setTimeout(()=>beep('ev'),350); }\n    beep('ok'); burst();\n  } else {\n    beep('bad');\n    if(choice!==null && q.type!=='order') S.tried.push(choice);\n    const optsLeft = q.type==='tf'?0 : q.type==='order'?1 : (q.o.length-S.tried.length-1);\n    if(!S.stealing && S.teamCount>1 && optsLeft>0){\n      S.stealing=true; S.attempt='steal-offer';\n      if(q.type==='order') S.order=[];\n    } else { S.answered=true; S.attempt = choice===null?'timeout':'bad'; }\n  }\n  render();\n}\nfunction award(t,pts){\n  S.teams[t].score+=pts; S.teams[t].right++;\n  setTimeout(()=>{const p=$('plus'+t); if(p){p.textContent='+'+pts;p.classList.remove('show');void p.offsetWidth;p.classList.add('show');}},30);\n}\nfunction next(){\n  S.turn=(S.turn+1)%S.teamCount;\n  if(S.qi < qCount()-1){ S.qi++; prepQ(); }\n  else { S.stage++; S.qi=-1; S.suspectOpen=null; if(STAGES[S.stage].id==='accuse'){S.accuseTeam=0;S.accuse={};S.revealed=false;} }\n  render();\n}\n\n/* =========================================================\n   ACCUSATION\n   ========================================================= */\nfunction accuseHtml(){\n  if(S.revealed) return revealHtml();\n  const t=S.accuseTeam, cur=S.accuse[t]||{};\n  const done = teams().every((_,i)=>S.accuse[i]&&S.accuse[i].s&&S.accuse[i].m);\n  const votes = sid => teams().map((x,i)=>S.accuse[i]&&S.accuse[i].s===sid&&i!==t?`<i style=\"background:${tc(i)}\"><\/i>`:'').join('');\n  return `<div class=\"q-head\"><div><div class=\"kicker\">Stage 5 \u00b7 Accusation<\/div><h2 class=\"serif\">\u2696\ufe0f Who stole the diamond?<\/h2><p class=\"muted\" style=\"margin:6px 0 0\">Each team discusses for one minute, then chooses a suspect and a motive.<\/p><\/div><\/div>\n    <div class=\"row\">${teams().map((x,i)=>`<button class=\"turn-pill\" style=\"--c:${tc(i)};${i===t?'':'opacity:.5'}\" data-a=\"acct\" data-v=\"${i}\"><span class=\"dot\"><\/span>${esc(x.name)} ${S.accuse[i]&&S.accuse[i].s&&S.accuse[i].m?'\u2713':''}<\/button>`).join('')}<\/div>\n    <div class=\"acc-team\"><span class=\"turn-pill\" style=\"--c:${tc(t)}\"><span class=\"dot\"><\/span>${esc(teams()[t].name)}<\/span> chooses:<\/div>\n    <div class=\"suspects\">${SUSPECTS.map(s=>`<button class=\"sus ${cur.s===s.id?'sel':''}\" data-a=\"pick-s\" data-v=\"${s.id}\">${portrait(s.id)}<strong>${s.name}<\/strong><span>${s.role}<\/span><div class=\"votes\">${votes(s.id)}<\/div><\/button>`).join('')}<\/div>\n    <div class=\"type-tag\" style=\"margin:8px 0\">Motive \u2014 why did she / he do it?<\/div>\n    <div class=\"motives\">${MOTIVES.map(m=>`<button class=\"mot ${cur.m===m.id?'sel':''}\" data-a=\"pick-m\" data-v=\"${m.id}\">${esc(m.t)}<\/button>`).join('')}<\/div>\n    <div class=\"actions\">${cur.s&&cur.m&&!done?`<button class=\"btn btn-gold\" data-a=\"acc-next\">Next team \u2192<\/button>`:''}\n      ${done?`<button class=\"btn btn-gold\" data-a=\"reveal\">\ud83e\udd41 Reveal the truth<\/button>`:''}<\/div>`;\n}\nfunction revealHtml(){\n  const res = teams().map((x,i)=>{const a=S.accuse[i]||{};return {i,s:a.s==='emily',m:a.m==='collector'};});\n  return `<div class=\"reveal\"><div class=\"kicker\">The truth<\/div>\n    <div class=\"culprit\" style=\"margin-top:12px\">${portrait('emily')}<div class=\"stamp\">GUILTY<\/div><\/div>\n    <h2 class=\"serif\" style=\"font-size:34px;margin:8px 0 0\">Emily, the Museum Assistant<\/h2>\n    <p class=\"muted\">Motive: she planned to sell the diamond to a private collector.<\/p>\n    <div class=\"confession\">${esc(L().confession)}<\/div>\n    <div class=\"row\" style=\"justify-content:center;margin:16px 0 0\"><button class=\"btn btn-sm\" data-a=\"saytext\">\ud83d\udd0a Listen to the confession<\/button><\/div>\n    <div class=\"row\" style=\"justify-content:center;margin-top:18px\">${res.map(r=>`<div class=\"team\" style=\"--c:${tc(r.i)};min-width:200px\"><span class=\"name\">${esc(teams()[r.i].name)}<\/span><span>${r.s?'\u2713 thief +30':'\u2717 thief'} \u00b7 ${r.m?'\u2713 motive +10':'\u2717 motive'}<\/span><\/div>`).join('')}<\/div>\n    <div class=\"actions\" style=\"justify-content:center\"><button class=\"btn btn-gold\" data-a=\"final\">See the final results \u2192<\/button><\/div><\/div>`;\n}\n\n/* =========================================================\n   FINAL\n   ========================================================= */\nfunction finalHtml(){\n  const ranked = teams().map((t,i)=>({...t,i})).sort((a,b)=>b.score-a.score);\n  const order = ranked.length>=3 ? [ranked[1],ranked[0],ranked[2]] : [ranked[1],ranked[0]].filter(Boolean);\n  const max = Math.max(1,...ranked.map(r=>r.score));\n  const place = r => ranked.findIndex(x=>x.score===r.score);\n  const medal = r => ['\ud83e\udd47','\ud83e\udd48','\ud83e\udd49','\ud83c\udfc5'][place(r)];\n  const winners = ranked.filter(r=>r.score===ranked[0].score).map(r=>esc(r.name)).join(' & ');\n  const rest = ranked.slice(3);\n  return `<div class=\"hero\" style=\"padding-top:6px\"><div class=\"kicker\">Case closed<\/div><h1 class=\"serif\" style=\"font-size:clamp(34px,6vw,52px)\"><em>${winners}<\/em><\/h1><p>${winners.includes('&')?'A draw! Best detectives of the day':'Best detectives of the day'}<\/p><\/div>\n    <div class=\"podium\">${order.map(r=>`<div class=\"pod\" style=\"--c:${tc(r.i)}\"><div class=\"medal\">${medal(r)}<\/div><div class=\"nm\">${esc(r.name)}<\/div><div class=\"bar\" style=\"height:${60+150*r.score/max}px\">${r.score}<\/div><\/div>`).join('')}<\/div>\n    ${rest.length?`<p class=\"muted\" style=\"text-align:center\">${rest.map(r=>`${medal(r)} ${esc(r.name)} \u2014 ${r.score}`).join(' \u00b7 ')}<\/p>`:''}\n    <div class=\"card\" style=\"margin-top:18px\"><div class=\"kicker\" style=\"margin-bottom:10px\">Words of the case \u00b7 ${S.lang===0?'\u0420\u0443\u0441\u0441\u043a\u0438\u0439':'\u049a\u0430\u0437\u0430\u049b\u0448\u0430'}<\/div>\n      <div class=\"words\">${usedWords().map(w=>`<div class=\"word\"><b>${w}<\/b><span>${GLOSS[w][S.lang]}<\/span><\/div>`).join('')}<\/div><\/div>\n    <div class=\"actions\" style=\"justify-content:center;margin-top:20px\"><button class=\"btn\" data-a=\"home\">Change teams<\/button><button class=\"btn btn-gold\" data-a=\"again\">Play again<\/button><\/div>`;\n}\n\n/* =========================================================\n   FX\n   ========================================================= */\nlet toastT;\nfunction toast(m){ let t=document.querySelector('.toast'); if(!t){t=document.createElement('div');t.className='toast';document.body.appendChild(t);} t.textContent=m; clearTimeout(toastT); toastT=setTimeout(()=>t.remove(),2200); }\nfunction confetti(n=160){\n  const c=$('confetti'), x=c.getContext('2d'); c.width=innerWidth; c.height=innerHeight;\n  const cols=['#e2be78','#ff6b6b','#4dabf7','#51cf66','#cc5de8','#fff'];\n  const P=Array.from({length:n},()=>({x:Math.random()*c.width,y:-20-Math.random()*c.height*.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*4,r:4+Math.random()*5,c:cols[Math.random()*cols.length|0],a:Math.random()*6}));\n  let f=0; (function loop(){x.clearRect(0,0,c.width,c.height);P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.a+=.1;x.save();x.translate(p.x,p.y);x.rotate(p.a);x.fillStyle=p.c;x.fillRect(-p.r/2,-p.r/2,p.r,p.r*.6);x.restore();}); if(++f<240) requestAnimationFrame(loop); else x.clearRect(0,0,c.width,c.height);})();\n}\nfunction burst(){ confetti(50); }\n\n/* tooltip for glossary words */\nfunction showTip(el){\n  const w=el.dataset.w.toLowerCase(), g=GLOSS[w]; if(!g) return;\n  const tip=$('tip'); tip.innerHTML=`<b>${esc(el.dataset.w)}<\/b><span>${g[S.lang]}<\/span>`; tip.classList.remove('hidden');\n  const r=el.getBoundingClientRect(); const tw=tip.offsetWidth;\n  tip.style.left=Math.max(8,Math.min(innerWidth-tw-8,r.left+r.width/2-tw/2))+'px'; tip.style.top=(r.top-tip.offsetHeight-10)+'px';\n  document.querySelectorAll('.gw.open').forEach(x=>x.classList.remove('open')); el.classList.add('open');\n}\nfunction hideTip(){ $('tip').classList.add('hidden'); document.querySelectorAll('.gw.open').forEach(x=>x.classList.remove('open')); }\n\n/* =========================================================\n   EVENTS\n   ========================================================= */\ndocument.addEventListener('mouseover',e=>{const g=e.target.closest('.gw'); if(g) showTip(g);});\ndocument.addEventListener('mouseout',e=>{if(e.target.closest('.gw')) hideTip();});\naddEventListener('scroll',hideTip,{passive:true});\ndocument.addEventListener('input',e=>{ if(e.target.dataset.team!=null){ S.teams[+e.target.dataset.team].name=e.target.value||TEAM_DEFAULTS[+e.target.dataset.team]; } });\n\ndocument.addEventListener('click',e=>{\n  const g=e.target.closest('.gw'); if(g){ showTip(g); speak(g.dataset.w); return; }\n  const b=e.target.closest('[data-a]'); if(!b) return;\n  const a=b.dataset.a, v=b.dataset.v;\n  const q = S.screen==='game' && S.qi>=0 && STAGES[S.stage].id!=='accuse' ? curQ() : null;\n  switch(a){\n    case 'lvl': S.level=v; render(); break;\n    case 'tn': S.teamCount=+v; render(); break;\n    case 'tm': S.timerSec=+v; render(); break;\n    case 'lg': S.lang=+v; render(); break;\n    case 'lang': S.lang=1-S.lang; render(); toast(S.lang?'\u0410\u0443\u0434\u0430\u0440\u043c\u0430: \u049b\u0430\u0437\u0430\u049b\u0448\u0430':'\u041f\u0435\u0440\u0435\u0432\u043e\u0434: \u0440\u0443\u0441\u0441\u043a\u0438\u0439'); break;\n    case 'sound': S.sound=!S.sound; render(); break;\n    case 'full': try{ document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>toast('Full screen is blocked here')); }catch(err){toast('Full screen is blocked here');} break;\n    case 'home': stopTimer(); try{speechSynthesis.cancel();}catch(_){} if(S.screen==='setup' && window.top!==window){ try{ window.top.location.href=window.top.location.pathname; }catch(e){} return; } S.screen='setup'; render(); break;\n    case 'start': case 'again': startGame(); break;\n    case 'readall': speak(L().story.join(' ')+' '+L().mail); break;\n    case 'sus': S.suspectOpen=v; S.heard[v]=true; render(); speak(L().talk[v], SUSPECTS.find(s=>s.id===v).pitch); break;\n    case 'say': speak(L().talk[v], SUSPECTS.find(s=>s.id===v).pitch); break;\n    case 'saytext': speak(L().confession, 1.25); break;\n    case 'begin': if(b.disabled) return; try{speechSynthesis.cancel();}catch(_){} S.qi=0; prepQ(); render(); break;\n    case 'opt': answer(+v); break;\n    case 'place': if(!S.order.includes(+v)){S.order.push(+v); render();} break;\n    case 'unplace': S.order.splice(+v,1); render(); break;\n    case 'clear': S.order=[]; render(); break;\n    case 'check': if(q && S.order.length===q.w.length) answer(0); break;\n    case 'next': next(); break;\n    case 'acct': S.accuseTeam=+v; render(); break;\n    case 'pick-s': (S.accuse[S.accuseTeam]=S.accuse[S.accuseTeam]||{}).s=v; render(); break;\n    case 'pick-m': (S.accuse[S.accuseTeam]=S.accuse[S.accuseTeam]||{}).m=v; render(); break;\n    case 'acc-next': { const nxt=teams().findIndex((_,i)=>!(S.accuse[i]&&S.accuse[i].s&&S.accuse[i].m)); S.accuseTeam=nxt<0?S.accuseTeam:nxt; render(); break; }\n    case 'reveal': beep('drum'); setTimeout(()=>{ teams().forEach((_,i)=>{const r=S.accuse[i]; let p=0; if(r.s==='emily')p+=30; if(r.m==='collector')p+=10; if(p){S.teams[i].score+=p;}}); S.revealed=true; render(); confetti(); beep('ok'); },900); break;\n    case 'final': S.screen='final'; render(); break;\n  }\n  if(document.getElementById('board')) setTimeout(drawStrings,520);\n});\naddEventListener('resize',()=>{ if($('board')) drawStrings(); });\ndocument.addEventListener('keyup',()=>{ if($('board')) setTimeout(drawStrings,520); });\n\ndocument.addEventListener('keydown',e=>{\n  if(e.target.tagName==='INPUT') return;\n  if(S.screen!=='game') return;\n  const st=STAGES[S.stage];\n  if(/^[1-4]$/.test(e.key) && S.qi>=0 && st.id!=='accuse' && !S.answered){\n    const q=curQ(); if(q.type==='order') return;\n    const i=+e.key-1, n=q.type==='tf'?2:q.o.length; if(i<n && !S.tried.includes(i)) answer(i);\n  } else if(e.key===' '||e.key==='Enter'){\n    e.preventDefault();\n    if(S.answered) next(); else if(S.qi<0 && st.id!=='accuse'){ const btn=document.querySelector('[data-a=\"begin\"]'); if(btn && !btn.disabled) btn.click(); }\n  } else if(e.key.toLowerCase()==='l'){\n    if(st.id==='brief'&&S.qi<0) speak(L().story.join(' ')+' '+L().mail);\n    else if(st.id==='talk'&&S.suspectOpen) speak(L().talk[S.suspectOpen]);\n    else if(S.qi>=0 && st.id!=='accuse') speak(plain(curQ().p).replace(/___/g,'blank'));\n  }\n});\n\nfunction startGame(){\n  S.teams.forEach(t=>{t.score=0;t.right=0;});\n  Object.assign(S,{screen:'game',stage:0,qi:-1,turn:0,evidence:[],suspectOpen:null,heard:{},accuse:{},accuseTeam:0,revealed:false});\n  render();\n}\nrender();\n<\/script>\n<\/body>\n<\/html>\n";
+function openTeams(){
+  document.body.innerHTML='';
+  const f=document.createElement('iframe');
+  f.setAttribute('allow','fullscreen; autoplay'); f.setAttribute('allowfullscreen','');
+  f.style.cssText='position:fixed;inset:0;width:100%;height:100%;border:0;background:#070b16';
+  f.srcdoc=CLASS_MODE_HTML; document.body.appendChild(f); document.title='English Mystery — Class Mode';
+}
+/* boot */
+if(params.get('teams')!==null) openTeams();
+else if(params.get('join')!==null) Player.joinScreen();
+else if(params.get('host')!==null) Host.setup();
+else startScreen();
+</script>
+</body>
+</html>
